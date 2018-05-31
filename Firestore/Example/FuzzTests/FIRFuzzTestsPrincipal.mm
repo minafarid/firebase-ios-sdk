@@ -17,13 +17,19 @@
 #import <Foundation/Foundation.h>
 
 #include "FuzzerDefs.h"
+#include "fuzz_test.h"
 
 namespace {
 
 // Contains the code to be fuzzed. Called by the fuzzing library with
 // different argument values for `data` and `size`.
 int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
-  // Code to be fuzz-tested here.
+  // Convert data to NSData.
+  NSData *d = [NSData dataWithBytes:data length:size];
+
+  // Fuzz-test UserDataConverter.
+  [FuzzTesting testFuzzingUserDataConverter:d];
+
   return 0;
 }
 
