@@ -19,13 +19,33 @@
 #import "fuzz_test.h"
 
 #import "Firestore/Source/API/FSTUserDataConverter.h"
+#import "Firestore/Source/API/FIRQuery+Internal.h"
+#import "Firestore/Source/Core/FSTQuery.h"
+//#import "Firestore/Source/Public/FIRFirestore.h"
+
+#import "FIRApp.h"
+#import "FIRFirestore.h"
+
+#import "Firestore/Example/Tests/API/FSTAPIHelpers.h"
 
 #include "Firestore/core/src/firebase/firestore/model/database_id.h"
 
 using firebase::firestore::model::DatabaseId;
+using firebase::firestore::model::ResourcePath;
 
 @implementation FuzzTesting
 
++ (void)testFuzzFIRQuery:(NSData *)data {
+  FIRApp *defaultApp = [FIRApp defaultApp];
+  FIRFirestore *firestore = [FIRFirestore firestoreForApp:defaultApp];
+  FSTQuery *fstQuery = [FSTQuery queryWithPath:ResourcePath({"collection"})];
+  FIRQuery *queryFoo = [FIRQuery referenceWithQuery:fstQuery firestore:firestore];
+  NSLog(@"queryFoo canonicalID = %@", [[queryFoo query] canonicalID]);
+}
+
+
+
+//------------------------------------------------------------------------------
 + (void)validateParsedData:(id)fv originalData:(NSData *)data {
   if (![fv isKindOfClass:[FSTFieldValue class]]) {
     NSLog(@"Crash!");
@@ -35,6 +55,8 @@ using firebase::firestore::model::DatabaseId;
 }
 
 + (void)testFuzzingUserDataConverter:(NSData *)data {
+  [FuzzTesting testFuzzFIRQuery:data];
+  return;
   @autoreleasepool {
     // Create UserDataConverter object to be used with different data types.
     static DatabaseId database_id{"project", DatabaseId::kDefault};

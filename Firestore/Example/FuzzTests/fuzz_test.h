@@ -21,6 +21,7 @@
 
 @interface FuzzTesting : NSObject
 
+//---------- UserDataConverter Fuzz Testing ------------------------------------
 + (void)testFuzzingUserDataConverter:(NSData *)data;
 
 + (void)validateParsedData:(id)fv originalData:(NSData *)data;
@@ -33,6 +34,9 @@
 
 + (id)testFuzzingUserDataConverter_NSDictionary:(NSData *)data
                                   withConverter:(FSTUserDataConverter *)converter;
+
+//---------- Serializer Fuzz Testing -------------------------------------------
++ (void)testFuzzFIRQuery:(NSData *) data;
 
 @end
 
