@@ -145,6 +145,7 @@
 		6003F5B2195388D20070C39A /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F591195388D20070C39A /* UIKit.framework */; };
 		6003F5BA195388D20070C39A /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 6003F5B8195388D20070C39A /* InfoPlist.strings */; };
 		6161B5032047140C00A99DBB /* FIRFirestoreSourceTests.mm in Sources */ = {isa = PBXBuildFile; fileRef = 6161B5012047140400A99DBB /* FIRFirestoreSourceTests.mm */; };
+		6E3101C620C832BA00D39A58 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 6E3101C520C832BA00D39A58 /* GoogleService-Info.plist */; };
 		6E51436C20C0834F0013FB0C /* FSTFuzzTesting.mm in Sources */ = {isa = PBXBuildFile; fileRef = 6E51436B20C0834F0013FB0C /* FSTFuzzTesting.mm */; };
 		6EDD3B4620BF247500C33877 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F58D195388D20070C39A /* Foundation.framework */; };
 		6EDD3B4820BF247500C33877 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F591195388D20070C39A /* UIKit.framework */; };
@@ -414,6 +415,7 @@
 		6E3101BF20C73E8B00D39A58 /* Pods_Firestore_Tests_iOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Pods_Firestore_Tests_iOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		6E3101C120C73EAB00D39A58 /* Pods_Firestore_IntegrationTests_iOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Pods_Firestore_IntegrationTests_iOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		6E3101C320C742FB00D39A58 /* FirebaseCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = FirebaseCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		6E3101C520C832BA00D39A58 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		6E45A1F020C73A1E00901025 /* Pods_Firestore_IntegrationTests_iOS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Pods_Firestore_IntegrationTests_iOS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		6E51436B20C0834F0013FB0C /* FSTFuzzTesting.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = FSTFuzzTesting.mm; sourceTree = "<group>"; };
 		6E51436D20C083630013FB0C /* fuzz_test.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = fuzz_test.h; sourceTree = "<group>"; };
@@ -781,6 +783,7 @@
 		6EDD3B5D20BF24A700C33877 /* FuzzTests */ = {
 			isa = PBXGroup;
 			children = (
+				6E3101C520C832BA00D39A58 /* GoogleService-Info.plist */,
 				6EDD3B5E20BF24D000C33877 /* FSTFuzzTestsPrincipal.mm */,
 				6E51436B20C0834F0013FB0C /* FSTFuzzTesting.mm */,
 				6EDD3B5C20BF247500C33877 /* Firestore_FuzzTests_iOS-Info.plist */,
@@ -1239,6 +1242,7 @@
 			files = (
 				6003F5A9195388D20070C39A /* Images.xcassets in Resources */,
 				873B8AEB1B1F5CCA007FD442 /* Main.storyboard in Resources */,
+				6E3101C620C832BA00D39A58 /* GoogleService-Info.plist in Resources */,
 				71719F9F1E33DC2100824A3D /* LaunchScreen.storyboard in Resources */,
 				6003F598195388D20070C39A /* InfoPlist.strings in Resources */,
 			);
@@ -2093,6 +2097,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 84434E57CA72951015FC71BC /* Pods-Firestore_FuzzTests_iOS.debug.xcconfig */;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				DEVELOPMENT_TEAM = EQHXZ8M8AV;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -2111,6 +2116,7 @@
 					"$(inherited)",
 					"\"${PODS_ROOT}/../../..\"",
 					"\"${PODS_ROOT}/../../../Firestore/third_party/abseil-cpp\"",
+					"\"${PODS_ROOT}/nanopb\"",
 				);
 				INFOPLIST_FILE = "FuzzTests/Firestore_FuzzTests_iOS-Info.plist";
 				OTHER_CFLAGS = (
@@ -2128,6 +2134,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 97C492D2524E92927C11F425 /* Pods-Firestore_FuzzTests_iOS.release.xcconfig */;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				DEVELOPMENT_TEAM = EQHXZ8M8AV;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -2146,6 +2153,7 @@
 					"$(inherited)",
 					"\"${PODS_ROOT}/../../..\"",
 					"\"${PODS_ROOT}/../../../Firestore/third_party/abseil-cpp\"",
+					"\"${PODS_ROOT}/nanopb\"",
 				);
 				INFOPLIST_FILE = "FuzzTests/Firestore_FuzzTests_iOS-Info.plist";
 				OTHER_CFLAGS = (

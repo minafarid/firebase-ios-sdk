@@ -18,8 +18,12 @@
 #define FIRESTORE_FUZZ_TEST_H
 
 #import "Firestore/Source/API/FSTUserDataConverter.h"
+#import "FIRFirestore.h"
 
 @interface FuzzTesting : NSObject
+
+
++ (FIRFirestore *) getFirestore;
 
 //---------- UserDataConverter Fuzz Testing ------------------------------------
 + (void)testFuzzingUserDataConverter:(NSData *)data;
@@ -35,7 +39,11 @@
 + (id)testFuzzingUserDataConverter_NSDictionary:(NSData *)data
                                   withConverter:(FSTUserDataConverter *)converter;
 
-//---------- Serializer Fuzz Testing -------------------------------------------
+//---------- General Fuzz Testing ----------------------------------------------
+
++ (void)testFuzzFIRQuery:(NSData *) data;
+
+//---------- Serialization Fuzz Testing ----------------------------------------
 + (void)testFuzzFIRQuery:(NSData *) data;
 
 @end

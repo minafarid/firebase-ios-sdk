@@ -19,16 +19,40 @@
 #include "LibFuzzer/FuzzerDefs.h"
 #include "fuzz_test.h"
 
+#include "Firestore/core/src/firebase/firestore/remote/serializer.h"
+#include "Firestore/core/src/firebase/firestore/model/field_value.h"
+#include "Firestore/core/src/firebase/firestore/model/database_id.h"
+#include "Firestore/core/src/firebase/firestore/util/status.h"
+#include "Firestore/core/src/firebase/firestore/util/statusor.h"
+
+#include "absl/types/optional.h"
+
+
+using firebase::firestore::model::DatabaseId;
+using firebase::firestore::model::FieldValue;
+using firebase::firestore::remote::Serializer;
+using firebase::firestore::util::StatusOr;
+
 namespace {
+
+void FuzzTestSerialization(DatabaseId database_id, const uint8_t *data, size_t size) {
+  Serializer *serializer = new Serializer(database_id);
+  StatusOr<FieldValue> fv_status = serializer->DecodeFieldValue(data, size);
+  NSLog(@"Status code = %ul", fv_status.status().code());
+  NSLog(@"Status OK = %@", fv_status.ok()? @"Yes" : @"No");
+}
 
 // Contains the code to be fuzzed. Called by the fuzzing library with
 // different argument values for `data` and `size`.
 int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
-  // Convert data to NSData.
-  NSData *d = [NSData dataWithBytes:data length:size];
 
   // Fuzz-test UserDataConverter.
-  [FuzzTesting testFuzzingUserDataConverter:d];
+  // NSData *d = [NSData dataWithBytes:data length:size];
+  // [FuzzTesting testFuzzingUserDataConverter:d];
+
+  // Fuzz-test serialization.
+  DatabaseId database_id{"project", DatabaseId::kDefault};
+  FuzzTestSerialization(database_id, data, size);
 
   return 0;
 }

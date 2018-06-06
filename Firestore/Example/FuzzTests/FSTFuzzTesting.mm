@@ -21,29 +21,47 @@
 #import "Firestore/Source/API/FSTUserDataConverter.h"
 #import "Firestore/Source/API/FIRQuery+Internal.h"
 #import "Firestore/Source/Core/FSTQuery.h"
-//#import "Firestore/Source/Public/FIRFirestore.h"
+#import "Firestore/Source/Util/FSTDispatchQueue.h"
+//#import "Firestore/Source/Public/FIRCollectionReference.h"
 
 #import "FIRApp.h"
 #import "FIRFirestore.h"
+#import "FIRDocumentSnapshot.h"
 
-#import "Firestore/Example/Tests/API/FSTAPIHelpers.h"
 
 #include "Firestore/core/src/firebase/firestore/model/database_id.h"
+//#include "Firestore/core/src/firebase/firestore/auth/empty_credentials_provider.h"
 
+namespace util = firebase::firestore::util;
 using firebase::firestore::model::DatabaseId;
 using firebase::firestore::model::ResourcePath;
+//using firebase::firestore::auth::CredentialsProvider;
+
+static FIRFirestore *firestore = nil;
 
 @implementation FuzzTesting
 
-+ (void)testFuzzFIRQuery:(NSData *)data {
-  FIRApp *defaultApp = [FIRApp defaultApp];
-  FIRFirestore *firestore = [FIRFirestore firestoreForApp:defaultApp];
-  FSTQuery *fstQuery = [FSTQuery queryWithPath:ResourcePath({"collection"})];
-  FIRQuery *queryFoo = [FIRQuery referenceWithQuery:fstQuery firestore:firestore];
-  NSLog(@"queryFoo canonicalID = %@", [[queryFoo query] canonicalID]);
++ (FIRFirestore *) getFirestore {
+  // Configure and initialize `firestore` if nil.
+  if (firestore == nil) {
+    [FIRApp configure];
+    firestore = [FIRFirestore firestore];
+  }
+  return firestore;
 }
 
++ (void)testFuzzFIRQuery:(NSData *)data {
 
+  FIRFirestore *firestore = [FuzzTesting getFirestore];  // Get static instance of Firestore.
+
+  // Read a particular restaurant.
+  //FIRDocumentReference *restaurant = [[firestore collectionWithPath:@"restaurants"] queryWhereField:@"name" isEqualTo:@"Prime Grill"];
+  //FIRDocumentReference *restaurantRef = [[firestore collectionWithPath:@"restaurants"] documentWithPath:@"HG8Jy5qWn8TlFNYdlwjQ"];
+
+  //FSTQuery *fstQuery = [FSTQuery queryWithPath:ResourcePath({"restaurants"})];
+  //FIRQuery *queryFoo = [FIRQuery referenceWithQuery:fstQuery firestore:firestore];
+  //NSLog(@"queryFoo canonicalID = %@", [[queryFoo query] canonicalID]);
+}
 
 //------------------------------------------------------------------------------
 + (void)validateParsedData:(id)fv originalData:(NSData *)data {
@@ -55,8 +73,6 @@ using firebase::firestore::model::ResourcePath;
 }
 
 + (void)testFuzzingUserDataConverter:(NSData *)data {
-  [FuzzTesting testFuzzFIRQuery:data];
-  return;
   @autoreleasepool {
     // Create UserDataConverter object to be used with different data types.
     static DatabaseId database_id{"project", DatabaseId::kDefault};
