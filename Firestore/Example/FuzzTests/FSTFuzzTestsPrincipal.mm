@@ -32,14 +32,29 @@ using firebase::firestore::model::DatabaseId;
 using firebase::firestore::model::FieldValue;
 using firebase::firestore::remote::Serializer;
 using firebase::firestore::util::StatusOr;
+using firebase::firestore::util::Status;
 
 namespace {
 
-void FuzzTestSerialization(DatabaseId database_id, const uint8_t *data, size_t size) {
+void FuzzTestSerialization(const uint8_t *data, size_t size) {
+  DatabaseId database_id{"project", DatabaseId::kDefault};
   Serializer *serializer = new Serializer(database_id);
-  StatusOr<FieldValue> fv_status = serializer->DecodeFieldValue(data, size);
-  NSLog(@"Status code = %ul", fv_status.status().code());
-  NSLog(@"Status OK = %@", fv_status.ok()? @"Yes" : @"No");
+
+  // Encode a value.
+  /*
+  FieldValue model = FieldValue::StringValue("Hello");
+  std::vector<uint8_t> bytes;
+  Status encoding_status = serializer->EncodeFieldValue(model, &bytes);
+  NSLog(@"Encoding status code = %ul", encoding_status.code());
+  NSLog(@"Encoding status OK = %@", encoding_status.ok()? @"Yes" : @"No");
+  for (int i=0; i<bytes.size(); i++) {
+    NSLog(@"Byte -> %u", bytes[i]);
+  }
+  */
+
+  StatusOr<FieldValue> decoding_status = serializer->DecodeFieldValue(data, size);
+  NSLog(@"Decoding status code = %ul", decoding_status.status().code());
+  NSLog(@"Decoding status OK = %@", decoding_status.ok()? @"Yes" : @"No");
 }
 
 // Contains the code to be fuzzed. Called by the fuzzing library with
@@ -50,9 +65,9 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   // NSData *d = [NSData dataWithBytes:data length:size];
   // [FuzzTesting testFuzzingUserDataConverter:d];
 
-  // Fuzz-test serialization.
-  DatabaseId database_id{"project", DatabaseId::kDefault};
-  FuzzTestSerialization(database_id, data, size);
+  // Fuzz-test Serialization.
+  //DatabaseId database_id{"project", DatabaseId::kDefault};
+  FuzzTestSerialization(data, size);
 
   return 0;
 }
@@ -62,7 +77,9 @@ int RunFuzzTestingMain() {
   // Arguments to libFuzzer main() function should be added to this array,
   // e.g., dictionaries, corpus, number of runs, jobs, etc.
   char *program_args[] = {
-      const_cast<char *>("RunFuzzTestingMain")  // First argument is program name.
+      const_cast<char *>("RunFuzzTestingMain"),  // First argument is program name.
+      const_cast<char *>("-artifact_prefix=/tmp/"),  // Write crashing inputs to /tmp/.
+      const_cast<char *>("/Users/minafarid/FuzzingData/SerializationCorpus")  // Corpus.
   };
   char **argv = program_args;
   int argc = sizeof(program_args) / sizeof(program_args[0]);
