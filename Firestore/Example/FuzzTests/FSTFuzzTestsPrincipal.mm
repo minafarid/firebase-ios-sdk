@@ -51,10 +51,12 @@ void FuzzTestSerialization(const uint8_t *data, size_t size) {
     NSLog(@"Byte -> %u", bytes[i]);
   }
   */
-
-  StatusOr<FieldValue> decoding_status = serializer->DecodeFieldValue(data, size);
-  NSLog(@"Decoding status code = %ul", decoding_status.status().code());
-  NSLog(@"Decoding status OK = %@", decoding_status.ok()? @"Yes" : @"No");
+  @try {
+    StatusOr<FieldValue> decoding_status = serializer->DecodeFieldValue(data, size);
+    NSLog(@"Decoding status: %@ (code = %d)", decoding_status.ok()? @"OK" : @"NOT OK", decoding_status.status().code());
+  } @catch (NSException *exception) {
+    NSLog(@"Caught exception: %@", exception.reason);
+  }
 }
 
 // Contains the code to be fuzzed. Called by the fuzzing library with
@@ -66,7 +68,6 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   // [FuzzTesting testFuzzingUserDataConverter:d];
 
   // Fuzz-test Serialization.
-  //DatabaseId database_id{"project", DatabaseId::kDefault};
   FuzzTestSerialization(data, size);
 
   return 0;
@@ -79,7 +80,10 @@ int RunFuzzTestingMain() {
   char *program_args[] = {
       const_cast<char *>("RunFuzzTestingMain"),  // First argument is program name.
       const_cast<char *>("-artifact_prefix=/tmp/"),  // Write crashing inputs to /tmp/.
-      const_cast<char *>("/Users/minafarid/FuzzingData/SerializationCorpus")  // Corpus.
+//      const_cast<char *>("/Users/minafarid/FuzzingData/SerializationCorpus")  // Corpus.
+      const_cast<char *>("/tmp/crash-2833a5a490217ab03b7d0516f9597911a4b216ac")  // SEGV crash.
+//    const_cast<char *>("/tmp/crash-06576556d1ad802f247cad11ae748be47b70cd9c")  // Stack-overflow crash.
+
   };
   char **argv = program_args;
   int argc = sizeof(program_args) / sizeof(program_args[0]);
