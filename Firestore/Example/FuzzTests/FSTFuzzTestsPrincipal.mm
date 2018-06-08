@@ -40,17 +40,6 @@ void FuzzTestSerialization(const uint8_t *data, size_t size) {
   DatabaseId database_id{"project", DatabaseId::kDefault};
   Serializer *serializer = new Serializer(database_id);
 
-  // Encode a value.
-  /*
-  FieldValue model = FieldValue::StringValue("Hello");
-  std::vector<uint8_t> bytes;
-  Status encoding_status = serializer->EncodeFieldValue(model, &bytes);
-  NSLog(@"Encoding status code = %ul", encoding_status.code());
-  NSLog(@"Encoding status OK = %@", encoding_status.ok()? @"Yes" : @"No");
-  for (int i=0; i<bytes.size(); i++) {
-    NSLog(@"Byte -> %u", bytes[i]);
-  }
-  */
   @try {
     StatusOr<FieldValue> decoding_status = serializer->DecodeFieldValue(data, size);
     NSLog(@"Decoding status: %@ (code = %d)", decoding_status.ok()? @"OK" : @"NOT OK", decoding_status.status().code());
@@ -62,10 +51,6 @@ void FuzzTestSerialization(const uint8_t *data, size_t size) {
 // Contains the code to be fuzzed. Called by the fuzzing library with
 // different argument values for `data` and `size`.
 int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
-
-  // Fuzz-test UserDataConverter.
-  // NSData *d = [NSData dataWithBytes:data length:size];
-  // [FuzzTesting testFuzzingUserDataConverter:d];
 
   // Fuzz-test Serialization.
   FuzzTestSerialization(data, size);
