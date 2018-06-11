@@ -41,6 +41,7 @@ void FuzzTestSerialization(const uint8_t *data, size_t size) {
   Serializer *serializer = new Serializer(database_id);
 
   @try {
+    NSLog(@"Going to decode...");
     StatusOr<FieldValue> decoding_status = serializer->DecodeFieldValue(data, size);
     NSLog(@"Decoding status: %@ (code = %d)", decoding_status.ok()? @"OK" : @"NOT OK", decoding_status.status().code());
   } @catch (NSException *exception) {
@@ -60,15 +61,28 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
 
 // Simulates calling the main() function of libFuzzer (FuzzerMain.cpp).
 int RunFuzzTestingMain() {
+
+  NSFileManager *filemgr;
+  NSString *currentpath;
+
+  filemgr = [[NSFileManager alloc] init];
+
+  currentpath = [filemgr currentDirectoryPath];
+  NSLog(@"%@", currentpath);
+
   // Arguments to libFuzzer main() function should be added to this array,
   // e.g., dictionaries, corpus, number of runs, jobs, etc.
   char *program_args[] = {
-      const_cast<char *>("RunFuzzTestingMain"),  // First argument is program name.
-      const_cast<char *>("-artifact_prefix=/tmp/"),  // Write crashing inputs to /tmp/.
-//      const_cast<char *>("/Users/minafarid/FuzzingData/SerializationCorpus")  // Corpus.
-      const_cast<char *>("/tmp/crash-2833a5a490217ab03b7d0516f9597911a4b216ac")  // SEGV crash.
-//    const_cast<char *>("/tmp/crash-06576556d1ad802f247cad11ae748be47b70cd9c")  // Stack-overflow crash.
+    const_cast<char *>("RunFuzzTestingMain"),  // First argument is program name.
+    const_cast<char *>("-artifact_prefix=/tmp/"),  // Write crashing inputs to /tmp/.
 
+    const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/Serialization/BinaryProtos")  // Serialization Corpus.
+
+    //const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/CrashingInputs/01-SEGV")
+
+    //const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/CrashingInputs/02-StackOverflow")
+
+    //const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/CrashingInputs/03-StackBufferOverflow")
   };
   char **argv = program_args;
   int argc = sizeof(program_args) / sizeof(program_args[0]);

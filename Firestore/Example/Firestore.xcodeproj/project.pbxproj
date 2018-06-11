@@ -2093,7 +2093,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 84434E57CA72951015FC71BC /* Pods-Firestore_FuzzTests_iOS.debug.xcconfig */;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				DEVELOPMENT_TEAM = EQHXZ8M8AV;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -2130,7 +2129,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 97C492D2524E92927C11F425 /* Pods-Firestore_FuzzTests_iOS.release.xcconfig */;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				DEVELOPMENT_TEAM = EQHXZ8M8AV;
 				FRAMEWORK_SEARCH_PATHS = (
