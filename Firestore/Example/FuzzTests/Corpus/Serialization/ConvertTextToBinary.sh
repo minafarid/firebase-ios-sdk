@@ -13,13 +13,23 @@ for text_proto_file in $text_protos_dir/*
 do
   file_content=`cat $text_proto_file`
   file_name=$(basename -- "$text_proto_file")
-  echo "Converting file: $file_name"
+  message_type="Value"
+  if [[ $file_name == doc-* ]]; then
+    message_type="Document"
+  elif [[ $file_name == fv-* ]]; then
+    message_type="Value"
+  elif [[ $file_name == arr-* ]]; then
+    message_type="ArrayValue"
+  elif [[ $file_name == map-* ]]; then
+    message_type="MapValue"
+  fi
+  echo "Converting file: $file_name (type: $message_type)"
   # TODO(minafarid): choose proper encoding based on file_name prefix.
   echo "$file_content" \
     | ./build/external/protobuf/src/protobuf-build/src/protoc \
     -I./Firestore/Protos/protos \
     -I./build/external/protobuf/src/protobuf/src \
-    --encode=google.firestore.v1beta1.Value \
+    --encode=google.firestore.v1beta1."$message_type" \
     google/firestore/v1beta1/document.proto \
     | tee "$binary_protos_dir"/"$file_name" > /dev/null
 done
