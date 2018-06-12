@@ -17,19 +17,21 @@
 #import <Foundation/NSObject.h>
 
 #include "LibFuzzer/FuzzerDefs.h"
-#include "fuzz_test.h"
+//#include "fuzz_test.h"
 
 #include "Firestore/core/src/firebase/firestore/remote/serializer.h"
 #include "Firestore/core/src/firebase/firestore/model/field_value.h"
 #include "Firestore/core/src/firebase/firestore/model/database_id.h"
 #include "Firestore/core/src/firebase/firestore/util/status.h"
 #include "Firestore/core/src/firebase/firestore/util/statusor.h"
+#include "Firestore/core/src/firebase/firestore/model/maybe_document.h"
 
 #include "absl/types/optional.h"
 
 
 using firebase::firestore::model::DatabaseId;
 using firebase::firestore::model::FieldValue;
+using firebase::firestore::model::MaybeDocument;
 using firebase::firestore::remote::Serializer;
 using firebase::firestore::util::StatusOr;
 using firebase::firestore::util::Status;
@@ -42,10 +44,17 @@ void FuzzTestSerialization(const uint8_t *data, size_t size) {
 
   @try {
     //NSLog(@"Going to decode...");
-    StatusOr<FieldValue> decoding_status = serializer->DecodeFieldValue(data, size);
+    // StatusOr<FieldValue> decoding_status =
+    serializer->DecodeFieldValue(data, size);
     //NSLog(@"Decoding status: %@ (code = %d)", decoding_status.ok()? @"OK" : @"NOT OK", decoding_status.status().code());
   } @catch (NSException *exception) {
-    //NSLog(@"Caught exception: %@", exception.reason);
+    NSLog(@"DecodeFieldValue -  Caught exception: %@", exception.reason);
+  }
+
+  @try {
+    //serializer->DecodeMaybeDocument(data, size);
+  } @catch (NSException *exception) {
+    NSLog(@"DecodeMaybeDocument - Caught exception: %@", exception.reason);
   }
 }
 
@@ -70,7 +79,8 @@ int RunFuzzTestingMain() {
     // Individual crashes.
     //const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/CrashingInputs/01-SEGV")
     //const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/CrashingInputs/02-StackOverflow")
-    const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/CrashingInputs/03-StackBufferOverflow")
+    //const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/CrashingInputs/03-StackBufferOverflow")
+    const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/CrashingInputs/04-SIGABRT")
   };
   char **argv = program_args;
   int argc = sizeof(program_args) / sizeof(program_args[0]);
