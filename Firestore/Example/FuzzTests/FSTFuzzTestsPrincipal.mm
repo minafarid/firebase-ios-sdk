@@ -61,7 +61,7 @@ void FuzzTestSerialization(const uint8_t *data, size_t size) {
 // Contains the code to be fuzzed. Called by the fuzzing library with
 // different argument values for `data` and `size`.
 int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
-  FuzzTestSerialization(data, size);
+  FuzzTestDeserialization(data, size);
   return 0;
 }
 

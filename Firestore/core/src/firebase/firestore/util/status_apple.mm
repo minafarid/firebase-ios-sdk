@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Google
+ * Copyright 2015, 2018 Google
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,30 +14,32 @@
  * limitations under the License.
  */
 
-#include "Firestore/core/src/firebase/firestore/auth/empty_credentials_provider.h"
+#include "Firestore/core/src/firebase/firestore/util/status.h"
+
+#include <cerrno>
+
+#include "Firestore/core/src/firebase/firestore/util/string_format.h"
 
 namespace firebase {
 namespace firestore {
-namespace auth {
+namespace util {
 
-void EmptyCredentialsProvider::GetToken(TokenListener completion) {
-  if (completion) {
-    // Unauthenticated token will force the GRPC fallback to use default
-    // settings.
-    completion(Token::Unauthenticated());
+Status Status::FromNSError(NSError* error) {
+  NSError* original = error;
+
+  while (error) {
+    if ([error.domain isEqualToString:NSPOSIXErrorDomain]) {
+      return FromErrno(static_cast<int>(error.code),
+                       MakeStringView(original.localizedDescription));
+    }
+
+    error = error.userInfo[NSUnderlyingErrorKey];
   }
+
+  return Status{FirestoreErrorCode::Unknown,
+                StringFormat("Unknown error: %s", original)};
 }
 
-void EmptyCredentialsProvider::SetUserChangeListener(
-    UserChangeListener listener) {
-  if (listener) {
-    listener(User::Unauthenticated());
-  }
-}
-
-void EmptyCredentialsProvider::InvalidateToken() {
-}
-
-}  // namespace auth
+}  // namespace util
 }  // namespace firestore
 }  // namespace firebase

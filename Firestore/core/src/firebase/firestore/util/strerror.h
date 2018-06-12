@@ -14,25 +14,23 @@
  * limitations under the License.
  */
 
-#ifndef FIRESTORE_CORE_SRC_FIREBASE_FIRESTORE_AUTH_EMPTY_CREDENTIALS_PROVIDER_H_
-#define FIRESTORE_CORE_SRC_FIREBASE_FIRESTORE_AUTH_EMPTY_CREDENTIALS_PROVIDER_H_
+#ifndef FIRESTORE_CORE_SRC_FIREBASE_FIRESTORE_UTIL_STRERROR_H_
+#define FIRESTORE_CORE_SRC_FIREBASE_FIRESTORE_UTIL_STRERROR_H_
 
-#include "Firestore/core/src/firebase/firestore/auth/credentials_provider.h"
+#include <string>
 
 namespace firebase {
 namespace firestore {
-namespace auth {
+namespace util {
 
-/** `EmptyCredentialsProvider` always yields an empty token. */
-class EmptyCredentialsProvider : public CredentialsProvider {
- public:
-  void GetToken(TokenListener completion) override;
-  void InvalidateToken() override;
-  void SetUserChangeListener(UserChangeListener listener) override;
-};
+// A portable and thread-safe alternative to strerror().
+// Returns a human-readable string describing the given POSIX error
+// code. If the error code is not translatable, the string will be
+// "Unknown error nnn". errno will not be modified by this call.
+std::string StrError(int errnum);
 
-}  // namespace auth
+}  // namespace util
 }  // namespace firestore
 }  // namespace firebase
 
-#endif  // FIRESTORE_CORE_SRC_FIREBASE_FIRESTORE_AUTH_EMPTY_CREDENTIALS_PROVIDER_H_
+#endif  // FIRESTORE_CORE_SRC_FIREBASE_FIRESTORE_UTIL_STRERROR_H_
