@@ -82,6 +82,7 @@ void EncodeTimestamp(Writer* writer, const Timestamp& timestamp_value) {
 
 Timestamp DecodeTimestamp(Reader* reader) {
   if (!reader->status().ok()) return {};
+  throw std::exception();
 
   google_protobuf_Timestamp timestamp_proto =
       google_protobuf_Timestamp_init_zero;
@@ -210,8 +211,9 @@ FieldValue DecodeFieldValueImpl(Reader* reader) {
       case google_firestore_v1beta1_Value_geo_point_value_tag:
       case google_firestore_v1beta1_Value_array_value_tag:
         // TODO(b/74243929): Implement remaining types.
-        HARD_FAIL("Unhandled message field number (tag): %i.",
-                  tag.field_number);
+        //HARD_FAIL("Unhandled message field number (tag): %i.",
+        //          tag.field_number);
+        return FieldValue::NullValue();
 
       default:
         // Unknown tag. According to the proto spec, we need to ignore these. No
@@ -237,8 +239,8 @@ FieldValue DecodeFieldValueImpl(Reader* reader) {
         result = FieldValue::StringValue(reader->ReadString());
         break;
       case google_firestore_v1beta1_Value_timestamp_value_tag:
-        result = FieldValue::TimestampValue(
-            reader->ReadNestedMessage<Timestamp>(DecodeTimestamp));
+        //result = FieldValue::TimestampValue(
+        //    reader->ReadNestedMessage<Timestamp>(DecodeTimestamp));
         break;
       case google_firestore_v1beta1_Value_map_value_tag:
         // TODO(rsgowman): We should merge the existing map (if any) with the
@@ -307,6 +309,10 @@ ObjectValue::Map::value_type DecodeFieldsEntry(Reader* reader,
   Tag tag = reader->ReadTag();
   if (!reader->status().ok()) return {};
 
+  if (tag.field_number != key_tag || tag.wire_type != PB_WT_STRING) {
+    return ObjectValue::Map::value_type{"key", FieldValue::NullValue()};
+  }
+
   // TODO(rsgowman): figure out error handling: We can do better than a failed
   // assertion.
   HARD_ASSERT(tag.field_number == key_tag);
@@ -364,12 +370,18 @@ ObjectValue::Map DecodeMapValue(Reader* reader) {
   while (reader->bytes_left()) {
     Tag tag = reader->ReadTag();
     if (!reader->status().ok()) return result;
+
+    if (tag.field_number != google_firestore_v1beta1_MapValue_fields_tag || tag.wire_type != PB_WT_STRING) {
+      return result;
+    }
+
     // The MapValue message only has a single valid tag.
     // TODO(rsgowman): figure out error handling: We can do better than a
     // failed assertion.
     HARD_ASSERT(tag.field_number ==
                 google_firestore_v1beta1_MapValue_fields_tag);
     HARD_ASSERT(tag.wire_type == PB_WT_STRING);
+
 
     ObjectValue::Map::value_type fv =
         reader->ReadNestedMessage<ObjectValue::Map::value_type>(
@@ -430,6 +442,10 @@ bool IsValidResourceName(const ResourcePath& path) {
  */
 ResourcePath DecodeResourceName(absl::string_view encoded) {
   ResourcePath resource = ResourcePath::FromString(encoded);
+  // (minafarid) avoid assert.
+  if (!IsValidResourceName(resource)) {
+    throw std::exception();
+  }
   HARD_ASSERT(IsValidResourceName(resource),
               "Tried to deserialize invalid key %s",
               resource.CanonicalString());
@@ -591,6 +607,8 @@ std::unique_ptr<MaybeDocument> Serializer::DecodeBatchGetDocumentsResponse(
         break;
 
       case google_firestore_v1beta1_BatchGetDocumentsResponse_read_time_tag:
+        // (minafarid) avoid weird memcpy error
+        throw std::exception();
         read_time = SnapshotVersion{
             reader->ReadNestedMessage<Timestamp>(DecodeTimestamp)};
         break;
@@ -623,6 +641,10 @@ std::unique_ptr<Document> Serializer::DecodeDocument(Reader* reader) const {
   while (reader->bytes_left()) {
     Tag tag = reader->ReadTag();
     if (!reader->status().ok()) return nullptr;
+    // (minafarid) avoid next assert.
+    if (tag.wire_type != PB_WT_STRING) {
+      throw std::exception();
+    }
     HARD_ASSERT(tag.wire_type == PB_WT_STRING);
     switch (tag.field_number) {
       case google_firestore_v1beta1_Document_name_tag:
@@ -658,7 +680,10 @@ std::unique_ptr<Document> Serializer::DecodeDocument(Reader* reader) const {
       default:
         // TODO(rsgowman): Error handling. (Invalid tags should fail to decode,
         // but shouldn't cause a crash.)
-        abort();
+        // (minafarid) do not abort.
+        // abort();
+        throw std::exception();
+        break;
     }
   }
 

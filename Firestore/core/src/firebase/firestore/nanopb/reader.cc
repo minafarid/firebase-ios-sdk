@@ -110,7 +110,7 @@ std::string Reader::ReadString() {
   pb_istream_t substream;
   if (!pb_make_string_substream(&stream_, &substream)) {
     status_ = Status(FirestoreErrorCode::DataLoss, PB_GET_ERROR(&stream_));
-    pb_close_string_substream(&stream_, &substream);
+    //pb_close_string_substream(&stream_, &substream);
     return "";
   }
 
