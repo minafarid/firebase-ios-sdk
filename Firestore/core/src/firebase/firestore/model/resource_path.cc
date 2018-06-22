@@ -33,6 +33,11 @@ ResourcePath ResourcePath::FromString(const absl::string_view path) {
   // sequences (e.g. __id123__) and just passes them through raw (they exist
   // for legacy reasons and should not be used frequently).
 
+  // (minafarid) avoid assertion.
+  if (path.find("//") != std::string::npos) {
+    throw std::exception();
+  }
+
   HARD_ASSERT(path.find("//") == std::string::npos,
               "Invalid path (%s). Paths must not contain // in them.", path);
 
