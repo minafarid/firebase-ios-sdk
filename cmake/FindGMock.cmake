@@ -14,33 +14,34 @@
 
 include(FindPackageHandleStandardArgs)
 
-set(BINARY_DIR ${FIREBASE_BINARY_DIR}/external/nanopb)
-
 find_path(
-  NANOPB_INCLUDE_DIR pb.h
+  GMOCK_INCLUDE_DIR gmock/gmock.h
+  HINTS ${FIREBASE_INSTALL_DIR}/include
 )
 
 find_library(
-  NANOPB_LIBRARY
-  NAMES protobuf-nanopb protobuf-nanopbd
+  GMOCK_LIBRARY
+  NAMES gmock
+  HINTS ${FIREBASE_INSTALL_DIR}/lib
 )
 
 find_package_handle_standard_args(
-  nanopb
+  gmock
   DEFAULT_MSG
-  NANOPB_INCLUDE_DIR
-  NANOPB_LIBRARY
+  GMOCK_INCLUDE_DIR
+  GMOCK_LIBRARY
 )
 
-if(NANOPB_FOUND)
-  set(NANOPB_INCLUDE_DIRS ${NANOPB_INCLUDE_DIR})
+if(GMOCK_FOUND)
+  set(GMOCK_INCLUDE_DIRS ${GMOCK_INCLUDE_DIR})
+  set(GMOCK_LIBRARIES ${GMOCK_LIBRARY})
 
-  if (NOT TARGET nanopb)
-    add_library(nanopb UNKNOWN IMPORTED)
+  if (NOT TARGET GMock::GMock)
+    add_library(GMock::GMock UNKNOWN IMPORTED)
     set_target_properties(
-      nanopb PROPERTIES
-      INTERFACE_INCLUDE_DIRECTORIES ${NANOPB_INCLUDE_DIRS}
-      IMPORTED_LOCATION ${NANOPB_LIBRARY}
+      GMock::GMock PROPERTIES
+      INTERFACE_INCLUDE_DIRECTORIES ${GMOCK_INCLUDE_DIRS}
+      IMPORTED_LOCATION ${GMOCK_LIBRARY}
     )
   endif()
-endif(NANOPB_FOUND)
+endif(GMOCK_FOUND)

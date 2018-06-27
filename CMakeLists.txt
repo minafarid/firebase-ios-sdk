@@ -27,7 +27,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 if(APPLE)
-  # When building on the apple platform certain Objective-C++ classes bridge
+  # When building on the Apple platform certain Objective-C++ classes bridge
   # back into other Firebase Cocoapods. This requires shelling out to xcodebuild
   # to verify the built frameworks are up-to-date. You can disable this to speed
   # up the build.
@@ -36,14 +36,24 @@ endif(APPLE)
 
 list(INSERT CMAKE_MODULE_PATH 0 ${PROJECT_SOURCE_DIR}/cmake)
 
-set(FIREBASE_INSTALL_DIR ${PROJECT_BINARY_DIR})
+set(FIREBASE_BINARY_DIR ${PROJECT_BINARY_DIR})
+set(FIREBASE_INSTALL_DIR ${PROJECT_BINARY_DIR}/opt)
+
+set(
+  FIREBASE_DOWNLOAD_DIR
+  ${PROJECT_BINARY_DIR}/downloads
+  CACHE PATH "Where to store downloaded files"
+)
 
 enable_testing()
 
+# These are ordered by a topological sort on DEPENDS attributes. This is
+# required because CMake fails the build if you have a DEPENDS on a target that
+# does not exist yet.
 include(external/FirebaseCore)
 include(external/googletest)
 include(external/leveldb)
-include(external/grpc)
 include(external/protobuf)
 include(external/nanopb)
+include(external/grpc)
 include(external/firestore)
