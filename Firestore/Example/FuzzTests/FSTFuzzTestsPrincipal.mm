@@ -157,13 +157,30 @@ NSArray *GetPossibleValuesForBytes(const uint8_t *data, size_t size) {
   // Convert to NSData.
   NSData *bytes = [NSData dataWithBytes:data length:size];
 
-  // Try casting as an NSDictionary.
+  // Try casting to an NSDictionary.
   NSDictionary *dict=[NSJSONSerialization
                             JSONObjectWithData:bytes
                             options:NSJSONReadingMutableLeaves
                             error:nil];
   if (dict != nil) {
     [vals addObject:dict];
+  }
+
+  // Try casting to an array.
+  NSArray *arr = [NSKeyedUnarchiver unarchiveObjectWithData:bytes];
+  if (arr != nil && [arr count] > 0) {
+    [vals addObject:arr];
+  }
+
+  // Cast as a string.
+  NSString *str =
+    [[NSString alloc] initWithBytes:data length:size encoding:NSUTF8StringEncoding];
+    //[[NSString alloc] initWithData:bytes encoding:NSUTF8StringEncoding];
+
+  if (str != nil && [str length] > 0) {
+    [vals addObject:str];
+  } else {
+    // NSLog(@"string = %@", str);
   }
 
   return vals;
@@ -211,16 +228,33 @@ NSArray *FieldValueInterpreter(const uint8_t *original_data, size_t original_siz
 }
 
 void FuzzTestFieldValue(const uint8_t *data, size_t size) {
-@autoreleasepool {
-  @try {
-    NSArray *vals = FieldValueInterpreter(data, size);
-    for (id val in vals) {
-      FSTFieldValue *fv = [converter parsedQueryValue:val];
+  @autoreleasepool {
+    @try {
+      NSArray *vals = FieldValueInterpreter(data, size);
+      for (id val in vals) {
+        @try {
+          [converter parsedQueryValue:val];
+        } @catch (...) {}
+
+        if ([val isKindOfClass:[NSDictionary class]]) {
+          @try {
+            [converter parsedSetData:val];
+          } @catch (...) {}
+
+          @try {
+            [converter parsedMergeData:val fieldMask:nil];
+          } @catch (...) {}
+
+          @try {
+            [converter parsedUpdateData:val];
+          } @catch (...) {}
+        }
+
+      }
+    } @catch (NSException *exception) {
+      //NSLog(@"Exception caught: %@", [exception reason]);
     }
-  } @catch (NSException *exception) {
-    //NSLog(@"Exception caught: %@", [exception reason]);
   }
-}
 }
 
 //  // Fuzz-test buffered writer
@@ -253,13 +287,16 @@ int RunFuzzTestingMain() {
       // No memory limit for libFuzzer.
       const_cast<char *>("-rss_limit_mb=0"),
       // Treat some new values as new coverage.
-      const_cast<char *>("-use_value_profile=1"),
+      const_cast<char *>("-use_value_profile=1")  ,
       // Print stats at exit.
       const_cast<char *>("-print_final_stats=1"),
 
+      // Only ASCII.
+      //const_cast<char *>("-only_ascii=1"),
+
       // Limit the runs/time to collect coverage statistics.
       //const_cast<char *>("-runs=1000000"),
-      //const_cast<char *>("-max_total_time=100"),
+      const_cast<char *>("-max_total_time=100"),
 
       // Use a dictionary and a corpus.
       // Serialization
@@ -275,9 +312,9 @@ int RunFuzzTestingMain() {
       //const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/FIRQuery/Inputs")
 
       // FieldVlaue.
-      //const_cast<char *>("-dict=/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/FieldValue/fv.dict"),
-      //const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/FieldValue/Inputs")
-      const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/FieldValue/Inputs/01-dict")
+      const_cast<char *>("-dict=/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/FieldValue/fv.dict"),
+      const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/FieldValue/Inputs")
+      //const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/FieldValue/Inputs/01-dict")
 
       // Run specific individual crashes.
       //const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/CrashingInputs/01-SEGV")
