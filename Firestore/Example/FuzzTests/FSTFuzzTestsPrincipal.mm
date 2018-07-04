@@ -15,6 +15,7 @@
  */
 
 #import <Foundation/NSObject.h>
+#import <XCTest/XCTest.h>
 
 //#import "FIRFieldPath.h"
 #import "Firestore/Source/API/FIRFieldPath+Internal.h"
@@ -24,6 +25,11 @@
 #import "Firestore/Source/API/FSTUserDataConverter.h"
 
 #import "FIRApp.h"
+#import "FIRDocumentReference.h";
+#import "FIRCollectionReference.h"
+#import "FIRDocumentSnapshot.h"
+#import "FIRQuerySnapshot.h"
+#import "FIRFirestoreSettings.h"
 #import "Firestore/Source/Core/FSTQuery.h"
 //#import "Firestore/Source/Public/FIRFirestore.h"
 #import "Firestore/Source/Remote/FSTBufferedWriter.h"
@@ -36,8 +42,6 @@
 #include "Firestore/core/src/firebase/firestore/model/database_id.h"
 #include "Firestore/core/src/firebase/firestore/model/resource_path.h"
 #include "Firestore/core/src/firebase/firestore/remote/serializer.h"
-
-
 
 namespace util = firebase::firestore::util;
 using firebase::firestore::model::DatabaseId;
@@ -119,10 +123,12 @@ void FuzzTestCollectionReference(const uint8_t *data, size_t size) {
 void FuzzTestFIRQuery(const uint8_t *data, size_t size) {
 //  @autoreleasepool {
     NSData *d = [NSData dataWithBytes:data length:size];
-    NSString *string = [[NSString alloc] initWithData:d encoding:NSUTF8StringEncoding];
-
+    NSString *string = [[NSString alloc] initWithBytes:data length:size encoding:NSUTF8StringEncoding];
+    NSArray *stringArray = [string componentsSeparatedByCharactersInSet:
+                            [NSCharacterSet characterSetWithCharactersInString:@".,_ "]];
     if ([string length] == 0) return;
     try {
+      FIRFieldPath *fp = [[FIRFieldPath alloc] initWithFields:stringArray];
       @try {
         ResourcePath resource_path = ResourcePath::FromString(util::MakeStringView(string));
         FSTQuery *fst_q = [FSTQuery queryWithPath:resource_path];
@@ -131,13 +137,23 @@ void FuzzTestFIRQuery(const uint8_t *data, size_t size) {
         NSPredicate *predicate = [NSPredicate predicateWithFormat:string];
         FIRQuery *q0 = [fir_q queryFilteredUsingPredicate:predicate];
 
-        //FIRQuery *q1 = [fir_q queryWhereField:string isEqualTo:string];
-        //FIRQuery *q2 = [fir_q queryWhereField:string isGreaterThan:string];
-        //FIRQuery *q3 = [fir_q queryWhereField:string isGreaterThanOrEqualTo:string];
-        //FIRQuery *q4 = [fir_q queryWhereField:string isLessThan:string];
+        FIRQuery *q1 = [fir_q queryWhereField:string isEqualTo:string];
+        FIRQuery *q2 = [fir_q queryWhereField:string isGreaterThan:string];
+        FIRQuery *q3 = [fir_q queryWhereField:string isGreaterThanOrEqualTo:string];
+        FIRQuery *q4 = [fir_q queryWhereField:string isLessThan:string];
         FIRQuery *q5 = [fir_q queryWhereField:string isLessThanOrEqualTo:string];
         FIRQuery *q6 = [fir_q queryOrderedByField:string];
         FIRQuery *q7 = [fir_q queryLimitedTo:d.hash];
+        FIRQuery *q8 = [fir_q queryWhereField:string arrayContains:@([string hash])];
+
+        FIRQuery *q1_ = [fir_q queryWhereFieldPath:fp isEqualTo:string];
+        FIRQuery *q2_ = [fir_q queryWhereFieldPath:fp isGreaterThan:string];
+        FIRQuery *q3_ = [fir_q queryWhereFieldPath:fp isGreaterThanOrEqualTo:string];
+        FIRQuery *q4_ = [fir_q queryWhereFieldPath:fp isLessThan:string];
+        FIRQuery *q5_ = [fir_q queryWhereFieldPath:fp isLessThanOrEqualTo:string];
+        FIRQuery *q6_ = [fir_q queryOrderedByFieldPath:fp];
+        // q7 N/A.
+        FIRQuery *q8_ = [fir_q queryWhereFieldPath:fp arrayContains:@([string hash])];
       } @catch(id ex) {
         //NSLog(@"Something happened. %@", [ex reason]);
       }
@@ -148,7 +164,6 @@ void FuzzTestFIRQuery(const uint8_t *data, size_t size) {
     }
 //  }
 }
-
 
 // Fuzz-test FieldValue.
 NSArray *GetPossibleValuesForBytes(const uint8_t *data, size_t size) {
@@ -162,6 +177,10 @@ NSArray *GetPossibleValuesForBytes(const uint8_t *data, size_t size) {
                             JSONObjectWithData:bytes
                             options:NSJSONReadingMutableLeaves
                             error:nil];
+
+  // TODO: Post-process strings with a prefix "DATE" and convert
+  // them to a Date.
+
   if (dict != nil) {
     [vals addObject:dict];
   }
@@ -175,13 +194,16 @@ NSArray *GetPossibleValuesForBytes(const uint8_t *data, size_t size) {
   // Cast as a string.
   NSString *str =
     [[NSString alloc] initWithBytes:data length:size encoding:NSUTF8StringEncoding];
-    //[[NSString alloc] initWithData:bytes encoding:NSUTF8StringEncoding];
 
   if (str != nil && [str length] > 0) {
     [vals addObject:str];
-  } else {
-    // NSLog(@"string = %@", str);
   }
+
+  // Cast as an integer -> use hash value of the data.
+  [vals addObject:@([bytes hash])];
+
+  // Cast as a double -> divide hash value by size.
+  [vals addObject:@([bytes hash]/size)];
 
   return vals;
 }
@@ -257,12 +279,6 @@ void FuzzTestFieldValue(const uint8_t *data, size_t size) {
   }
 }
 
-//  // Fuzz-test buffered writer
-//void FuzzTestBufferedWriter(const uint8_t *data, size_t size) {
-//  NSData *d = [NSData dataWithBytes:data length:size];
-//  [writer writeValue:d];
-//}
-
 // Contains the code to be fuzzed. Called by the fuzzing library with
 // different argument values for `data` and `size`.
 int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
@@ -277,6 +293,16 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
 
 // Simulates calling the main() function of libFuzzer (FuzzerMain.cpp).
 int RunFuzzTestingMain() {
+
+  // Get the dictionary file.
+  NSString *dictionaryFilePath = [[[NSBundle mainBundle] resourcePath]
+       stringByAppendingPathComponent:@"PlugIns/Firestore_FuzzTests_iOS.xctest/fv.dictionary"];
+
+  const char *dictArg = [[[NSString
+                        stringWithCString:"-dict="
+                        encoding:NSUTF8StringEncoding]
+                       stringByAppendingString:dictionaryFilePath] UTF8String];
+
   // Arguments to libFuzzer main() function should be added to this array,
   // e.g., dictionaries, corpus, number of runs, jobs, etc.
   char *program_args[] = {
@@ -290,6 +316,8 @@ int RunFuzzTestingMain() {
       const_cast<char *>("-use_value_profile=1")  ,
       // Print stats at exit.
       const_cast<char *>("-print_final_stats=1"),
+      // Max size should be high to generate large input.
+      const_cast<char *>("-max_len=10000"),
 
       // Only ASCII.
       //const_cast<char *>("-only_ascii=1"),
@@ -303,18 +331,18 @@ int RunFuzzTestingMain() {
       //const_cast<char *>("-dict=/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/Serialization/serialization.dict"),
       //const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/Serialization/BinaryProtos")
 
-      // FieldPath
-      //const_cast<char *>("-dict=/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/FieldPath/fieldpath.dict"),
-      //const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/FieldPath/Inputs")
-
       // FIRQuery.
       //const_cast<char *>("-dict=/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/FIRQuery/firquery.dict"),
       //const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/FIRQuery/Inputs")
 
+      // FieldPath
+      //const_cast<char *>("-dict=/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/FieldPath/fieldpath.dict"),
+      //const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/FieldPath/Inputs")
+
       // FieldVlaue.
-      const_cast<char *>("-dict=/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/FieldValue/fv.dict"),
+      const_cast<char *>([[@"-dict=" stringByAppendingString:dictionaryFilePath] UTF8String]),
+                         ///Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/FieldValue/fv.dict"),
       const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/FieldValue/Inputs")
-      //const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/FieldValue/Inputs/01-dict")
 
       // Run specific individual crashes.
       //const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/CrashingInputs/01-SEGV")
@@ -330,6 +358,9 @@ int RunFuzzTestingMain() {
   DatabaseId database_id{"project", DatabaseId::kDefault};
   serializer = new Serializer(database_id);
 
+  // Firestore connection.
+  firestore = FSTTestFirestore();
+
   // User data converter. No modification to the original input.
   converter = [[FSTUserDataConverter alloc]
                     initWithDatabaseID:&database_id
@@ -337,77 +368,53 @@ int RunFuzzTestingMain() {
                       return input;
                     }];
 
-  // Configure Firestore connection.
-  //[FIRApp configure];
-  //firestore = [FIRFirestore firestore];
-  firestore = FSTTestFirestore();
-
-  // FSTBufferedWriter object.
-  // writer = [[FSTBufferedWriter alloc] init];
-  // [writer setState:GRXWriterStateStarted];
-
   // Start fuzzing using libFuzzer's driver.
   return fuzzer::FuzzerDriver(&argc, &argv, LLVMFuzzerTestOneInput);
 }
 
 void RunSingleTesting() {
-  //{0x52, 0x01, 0x8a, 0x8a, 0x01, 0x48};
-  /*
-  DatabaseId database_id{"p", "d"};
-  Serializer *serializer = new Serializer(database_id);
-  std::vector<uint8_t> bytes
-      //{0x8a, 0x01}; // used to crash - fixed wrong api call to close stream.
-      {0x52};
-      //{0x52, 0x01, 0x8a, 0x8a, 0x01, 0x48};
-  //fuzzer::Unit U = fuzzer::FileToVector("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/CrashingInputs/02-StackOverflow");
-  //serializer->DecodeFieldValue(U.data(), U.size());
-  serializer->DecodeFieldValue(bytes);
+  // Configure Firestore.
+  [FIRApp configure];
+  FIRFirestore *firestore = [FIRFirestore firestore];
+  FIRFirestoreSettings *settings = [firestore settings];
+  settings.timestampsInSnapshotsEnabled = @YES;
+  firestore.settings = settings;
 
-  //serializer->DecodeMaybeDocument(bytes);
-  */
+  FIRCollectionReference *restaurants = [firestore collectionWithPath:@"restaurants"];
 
-  /*
-  NSString *string = @"__name__";
-  ResourcePath resource_path = ResourcePath::FromString(util::MakeStringView(@"field.subfield"));
-  FSTQuery *fst_q = [FSTQuery queryWithPath:resource_path];
-  FIRQuery *fir_q = [FIRQuery referenceWithQuery:fst_q firestore:firestore];
-  FIRQuery *fir_q1 = [fir_q queryWhereField:string isEqualTo:string];
-   */
+  XCTestExpectation *ex = [[XCTestExpectation alloc] initWithDescription:@"query"];
+  [[firestore collectionWithPath:@"restaurants"]
+   getDocumentsWithCompletion:^(FIRQuerySnapshot *snapshot, NSError *error) {
+     NSLog(@"************** RETURNED ***********");
+     if (error != nil) {
+       NSLog(@"Error getting documents: %@", error);
+     } else {
+       NSLog(@"*************************");
+       for (FIRDocumentSnapshot *document in snapshot.documents) {
+         NSLog(@"%@ => %@", document.documentID, document.data);
+       }
+       NSLog(@"*************************");
+     }
+     [ex fulfill];
+   }];
 
-  /*
-  @try {
-    NSLog(@"trying predicate 0...:");
-    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"0 = a"];
-  } @catch (NSException *exception) {
-    NSLog(@"0 Crash: %@", [exception reason]);
-  }
 
-  @try {
-    NSLog(@"trying predicate 1...:");
-    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"ssf awy && ss *"];
-  } @catch (NSException *exception) {
-    NSLog(@"1 Crash: %@", [exception reason]);
-  }
+  FIRDocumentReference *docRef =
+  [[firestore collectionWithPath:@"restaurants"] documentWithPath:@"HQuh3J5vFzaOGIcLvot9"];
+  [docRef getDocumentWithSource:FIRFirestoreSourceServer
+                     completion:^(FIRDocumentSnapshot *snapshot, NSError *error) {
+                       if (snapshot != NULL) {
+                         // The document data was found in the cache.
+                         NSLog(@"Cached document data: %@", snapshot.data);
+                       } else {
+                         // The document data was not found in the cache.
+                         NSLog(@"Document does not exist in cache: %@", error);
+                       }
+                     }];
 
-  @try {
-    NSLog(@"trying predicate 2...:");
-    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"`/\\"];
-  } @catch (NSException *exception) {
-    NSLog(@"2 Crash: %@", [exception reason]);
-  }
-  */
 
-  NSString* str = @"teststring";
-  NSData *bytesData = [str dataUsingEncoding:NSUTF8StringEncoding];
-  DatabaseId database_id{"project", DatabaseId::kDefault};
-  converter = [[FSTUserDataConverter alloc]
-               initWithDatabaseID:&database_id
-               preConverter:^id _Nullable(id _Nullable input) {
-                 return input;
-               }];
-  //id value = @1;
-  FSTFieldValue *fv = [converter parsedQueryValue:bytesData];
-  NSLog(@"fv = %@", fv);
+  NSArray *expectations = [NSArray arrayWithObject:ex];
+  [XCTWaiter waitForExpectations:expectations timeout:10];
 }
 
 }  // namespace

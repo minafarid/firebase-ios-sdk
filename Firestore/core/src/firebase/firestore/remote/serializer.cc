@@ -544,6 +544,7 @@ std::unique_ptr<Document> Serializer::DecodeDocument(Reader* reader) const {
       default:
         // TODO(rsgowman): Error handling. (Invalid tags should fail to decode,
         // but shouldn't cause a crash.)
+        throw std::exception();
         abort();
     }
   }
