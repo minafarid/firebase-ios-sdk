@@ -19,9 +19,9 @@
 
 #include <functional>
 #include <initializer_list>
+#include <iostream>
 #include <memory>
 #include <string>
-#include <iostream>
 
 #if defined(__OBJC__)
 #import "Firestore/Source/Model/FSTDocumentKey.h"
@@ -52,7 +52,7 @@ class DocumentKey {
   explicit DocumentKey(ResourcePath&& path);
 
   ~DocumentKey() {
-    //std::cout<< "\nDocumentKey destructor ---- MINA\n";
+    // std::cout<< "\nDocumentKey destructor ---- MINA\n";
   }
 #if defined(__OBJC__)
   DocumentKey(FSTDocumentKey* key)  // NOLINT(runtime/explicit)

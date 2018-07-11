@@ -526,7 +526,8 @@ void FuzzTestQuerying(const uint8_t *data, size_t size) {
   }
   //*///------------------------------------------------------------------------
 
-  XCTWaiterResult waiterResult = [XCTWaiter waitForExpectations:expectations timeout:5 enforceOrder:NO];
+  XCTWaiterResult waiterResult =
+      [XCTWaiter waitForExpectations:expectations timeout:5 enforceOrder:NO];
   NSLog(@"Waiter result = %ld", (long)waiterResult);
 }
 
@@ -584,9 +585,10 @@ int RunFuzzTestingMain() {
       // *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/Serialization/BinaryProtos")
 
       // Querying backend.
-      //const_cast<char *>("-dict=/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/"
+      // const_cast<char
+      // *>("-dict=/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/"
       //                   "FuzzTests/Corpus/Backend/backend.dictionary"),
-      //const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/"
+      // const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/"
       //                   "FuzzTests/Corpus/Backend/Inputs")
       // const_cast<char
       // *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/Backend/CrashingInputs/release-nonexistent-query-no-nulls")

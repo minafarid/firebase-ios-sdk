@@ -790,8 +790,8 @@ NSString *FSTStringFromQueryRelationOperator(FSTRelationFilterOperator filterOpe
 - (BOOL)isEqualToQuery:(FSTQuery *)other {
   if (![self.sortOrders isEqual:other.sortOrders]) {
     NSLog(@"sort orders are different");
-    //self.force = YES;
-    //other.force = YES;
+    // self.force = YES;
+    // other.force = YES;
     bool foo = [self.sortOrders isEqual:other.sortOrders];
   }
   return self.path == other.path && self.limit == other.limit &&
