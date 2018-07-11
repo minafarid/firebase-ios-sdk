@@ -163,7 +163,7 @@ jobs:
       script:
         - ./scripts/if_changed.sh ./scripts/build.sh $PROJECT $PLATFORM $METHOD
 
-    - stage: fuzz_test
+    - stage: test
       before_install:
         - ./scripts/if_changed.sh ./scripts/install_prereqs.sh
       script:
