@@ -533,12 +533,12 @@ void FuzzTestQuerying(const uint8_t *data, size_t size) {
 // Contains the code to be fuzzed. Called by the fuzzing library with
 // different argument values for `data` and `size`.
 int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
-  // FuzzTestDeserialization(data, size);
+  FuzzTestDeserialization(data, size);
   // FuzzTestFieldPath(data, size);
   // FuzzTestCollectionReference(data, size);
   // FuzzTestFIRQuery(data, size);
   // FuzzTestFieldValue(data, size);
-  FuzzTestQuerying(data, size);
+  // FuzzTestQuerying(data, size);
   return 0;
 }
 
@@ -574,7 +574,7 @@ int RunFuzzTestingMain() {
 
       // Limit the runs/time to collect coverage statistics.
       // const_cast<char *>("-runs=10"),
-      // const_cast<char *>("-max_total_time=100"),
+      const_cast<char *>("-max_total_time=100")
 
       // Use a dictionary and a corpus.
       // Serialization
@@ -584,10 +584,10 @@ int RunFuzzTestingMain() {
       // *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/Serialization/BinaryProtos")
 
       // Querying backend.
-      const_cast<char *>("-dict=/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/"
-                         "FuzzTests/Corpus/Backend/backend.dictionary"),
-      const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/"
-                         "FuzzTests/Corpus/Backend/Inputs")
+      //const_cast<char *>("-dict=/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/"
+      //                   "FuzzTests/Corpus/Backend/backend.dictionary"),
+      //const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/"
+      //                   "FuzzTests/Corpus/Backend/Inputs")
       // const_cast<char
       // *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/Backend/CrashingInputs/release-nonexistent-query-no-nulls")
       // const_cast<char *>("/tmp/crash-5ba93c9db0cff93f52b521d7420e43f6eda2784f")
