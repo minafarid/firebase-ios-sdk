@@ -1,6 +1,7 @@
 os: osx
 osx_image: xcode9.3
 language: objective-c
+podfile: $TRAVIS_BUILD_DIR/Firestore/Example/Podfile
 cache:
   - bundler
   - cocoapods
@@ -167,9 +168,8 @@ jobs:
       # before_install:
       #   - gem install cocoapods
       #   - pod install --project-directory=Example
-      podfile: $TRAVIS_BUILD_DIR/Firestore/Example/Podfile
       script:
-        - pwd && ls && xcodebuild -workspace $TRAVIS_BUILD_DIR/Firestore.xcworkspace -scheme Firestore_FuzzTests_iOS -destination 'platform=iOS Simulator,name=iPhone 8 Plus,OS=11.3' test
+        - pwd && ls && ls Firestore/Example/ && xcodebuild -workspace $TRAVIS_BUILD_DIR/Firestore.xcworkspace -scheme Firestore_FuzzTests_iOS -destination 'platform=iOS Simulator,name=iPhone 8 Plus,OS=11.3' test
 
     # TODO(varconst): UBSan for CMake. UBSan failures are non-fatal by default,
     # need to make them fatal for the purposes of the test run.
