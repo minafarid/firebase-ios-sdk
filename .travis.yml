@@ -1,7 +1,6 @@
 os: osx
 osx_image: xcode9.3
 language: objective-c
-podfile: $HOME/Firestore/Example/Podfile
 cache:
   - bundler
   - cocoapods
@@ -170,6 +169,7 @@ jobs:
       # before_install:
       #   - gem install cocoapods
       #   - pod install --project-directory=Example
+      podfile: $HOME/Firestore/Example/Podfile
       script:
         - xcodebuild -workspace $TRAVIS_BUILD_DIR/Firestore.xcworkspace -scheme Firestore_FuzzTests_iOS -destination 'platform=iOS Simulator,name=iPhone 8 Plus,OS=11.3' test
 
