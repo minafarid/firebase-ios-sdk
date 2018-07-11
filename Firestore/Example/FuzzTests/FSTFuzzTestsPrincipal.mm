@@ -515,6 +515,8 @@ void FuzzTestQuerying(const uint8_t *data, size_t size) {
           getDocumentsWithCompletion:^(FIRQuerySnapshot *_Nullable snapshot,
                                        NSError *_Nullable error) {
             [ex fulfill];
+
+            NSLog(@"4. query = nil");
           }];
     } @catch (NSException *e) {
       // NSLog(@"4. exception: %@", [e reason]);
@@ -524,7 +526,8 @@ void FuzzTestQuerying(const uint8_t *data, size_t size) {
   }
   //*///------------------------------------------------------------------------
 
-  [XCTWaiter waitForExpectations:expectations timeout:2 enforceOrder:NO];
+  XCTWaiterResult waiterResult = [XCTWaiter waitForExpectations:expectations timeout:5 enforceOrder:NO];
+  NSLog(@"Waiter result = %ld", (long)waiterResult);
 }
 
 // Contains the code to be fuzzed. Called by the fuzzing library with
@@ -584,7 +587,7 @@ int RunFuzzTestingMain() {
       const_cast<char *>("-dict=/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/"
                          "FuzzTests/Corpus/Backend/backend.dictionary"),
       const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/"
-                         "FuzzTests/Corpus/Backend/Inputs2")
+                         "FuzzTests/Corpus/Backend/Inputs")
       // const_cast<char
       // *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/Backend/CrashingInputs/release-nonexistent-query-no-nulls")
       // const_cast<char *>("/tmp/crash-5ba93c9db0cff93f52b521d7420e43f6eda2784f")
