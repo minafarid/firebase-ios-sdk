@@ -20,6 +20,7 @@
 #include <initializer_list>
 #include <string>
 #include <utility>
+#include <iostream>
 
 #include "Firestore/core/src/firebase/firestore/model/base_path.h"
 #include "absl/strings/string_view.h"
@@ -42,6 +43,9 @@ class ResourcePath : public impl::BasePath<ResourcePath> {
   ResourcePath(std::initializer_list<std::string> list) : BasePath{list} {
   }
   explicit ResourcePath(SegmentsT&& segments) : BasePath{std::move(segments)} {
+  }
+  ~ResourcePath(){
+    //std::cout<< "\nResource path destructor ---- MINA\n";
   }
   /**
    * Creates and returns a new path from the given resource-path string, where

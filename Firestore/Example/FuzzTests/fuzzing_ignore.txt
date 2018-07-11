@@ -1,0 +1,2 @@
+# Ignore gRPC function
+fun:*strdup*

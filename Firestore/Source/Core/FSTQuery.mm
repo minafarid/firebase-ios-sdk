@@ -584,7 +584,7 @@ NSString *FSTStringFromQueryRelationOperator(FSTRelationFilterOperator filterOpe
 #pragma mark - Public methods
 
 - (NSArray *)sortOrders {
-  if (self.memoizedSortOrders == nil) {
+  if (self.memoizedSortOrders == nil || self.force) {
     const FieldPath *inequalityField = [self inequalityFilterField];
     const FieldPath *firstSortOrderField = [self firstSortOrderField];
     if (inequalityField && !firstSortOrderField) {
@@ -788,6 +788,12 @@ NSString *FSTStringFromQueryRelationOperator(FSTRelationFilterOperator filterOpe
 #pragma mark - Private methods
 
 - (BOOL)isEqualToQuery:(FSTQuery *)other {
+  if (![self.sortOrders isEqual:other.sortOrders]) {
+    NSLog(@"sort orders are different");
+    //self.force = YES;
+    //other.force = YES;
+    bool foo = [self.sortOrders isEqual:other.sortOrders];
+  }
   return self.path == other.path && self.limit == other.limit &&
          [self.filters isEqual:other.filters] && [self.sortOrders isEqual:other.sortOrders] &&
          (self.startAt == other.startAt || [self.startAt isEqual:other.startAt]) &&

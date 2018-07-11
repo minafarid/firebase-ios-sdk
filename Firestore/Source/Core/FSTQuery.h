@@ -272,6 +272,8 @@ typedef NS_ENUM(NSInteger, FSTRelationFilterOperator) {
 /** An optional bound to end the query at. */
 @property(nonatomic, nullable, strong, readonly) FSTBound *endAt;
 
+@property(nonatomic) Boolean force;
+
 @end
 
 NS_ASSUME_NONNULL_END

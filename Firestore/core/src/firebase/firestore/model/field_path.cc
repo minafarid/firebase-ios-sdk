@@ -133,8 +133,8 @@ const FieldPath& FieldPath::EmptyPath() {
   return empty_path;
 }
 
-const FieldPath& FieldPath::KeyFieldPath() {
-  static const FieldPath key_field_path{FieldPath::kDocumentKeyPath};
+FieldPath FieldPath::KeyFieldPath() {
+  /*static const*/ FieldPath key_field_path{FieldPath::kDocumentKeyPath};
   return key_field_path;
 }
 

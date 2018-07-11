@@ -16,6 +16,9 @@
 
 #import <Foundation/NSObject.h>
 #import <XCTest/XCTest.h>
+#import <GRPCClient/GRPCCall+ChannelArg.h>
+#import <GRPCClient/GRPCCall+Tests.h>
+#import <FirebaseCore/FIRLogger.h>
 
 //#import "FIRFieldPath.h"
 #import "Firestore/Source/API/FIRFieldPath+Internal.h"
@@ -23,27 +26,32 @@
 #import "Firestore/Source/API/FIRQuery+Internal.h"
 #import "Firestore/Source/API/FIRFirestore+Internal.h"
 #import "Firestore/Source/API/FSTUserDataConverter.h"
+#import "Firestore/Source/Public/FIRFirestoreSettings.h"
 
 #import "FIRApp.h"
-#import "FIRDocumentReference.h";
+#import "FIRDocumentReference.h"
 #import "FIRCollectionReference.h"
 #import "FIRDocumentSnapshot.h"
 #import "FIRQuerySnapshot.h"
-#import "FIRFirestoreSettings.h"
+
 #import "Firestore/Source/Core/FSTQuery.h"
 //#import "Firestore/Source/Public/FIRFirestore.h"
 #import "Firestore/Source/Remote/FSTBufferedWriter.h"
+#import "Firestore/Source/Util/FSTDispatchQueue.h"
 
 #import "Firestore/Example/Tests/API/FSTAPIHelpers.h"
 
 #include "LibFuzzer/FuzzerDefs.h"
 #include "LibFuzzer/FuzzerIO.h"
 
+#include "Firestore/core/src/firebase/firestore/auth/empty_credentials_provider.h"
 #include "Firestore/core/src/firebase/firestore/model/database_id.h"
 #include "Firestore/core/src/firebase/firestore/model/resource_path.h"
 #include "Firestore/core/src/firebase/firestore/remote/serializer.h"
 
 namespace util = firebase::firestore::util;
+using firebase::firestore::auth::CredentialsProvider;
+using firebase::firestore::auth::EmptyCredentialsProvider;
 using firebase::firestore::model::DatabaseId;
 using firebase::firestore::model::ResourcePath;
 using firebase::firestore::remote::Serializer;
@@ -55,8 +63,21 @@ static Serializer *serializer;
 static FIRFirestore *firestore;
 static FSTBufferedWriter *writer;
 static FSTUserDataConverter *converter;
+static NSMutableSet *processedStrings;
 
-FIRFirestore *FSTTestFirestore() {
+FIRFirestore *GetFriendlyEatsFirestore() {
+  if (firestore != nil) {
+    return firestore;
+  }
+  [FIRApp configure];
+  firestore = [FIRFirestore firestore];
+  FIRFirestoreSettings *settings = [firestore settings];
+  settings.timestampsInSnapshotsEnabled = @YES;
+  firestore.settings = settings;
+  return firestore;
+}
+
+FIRFirestore *GetTestFirestore() {
   static FIRFirestore *sharedInstance = nil;
   static dispatch_once_t onceToken;
 
@@ -72,6 +93,68 @@ FIRFirestore *FSTTestFirestore() {
   });
 #pragma clang diagnostic pop
   return sharedInstance;
+}
+  
+FIRFirestoreSettings *settings() {
+  FIRFirestoreSettings *settings = [[FIRFirestoreSettings alloc] init];
+  NSString *host = [[NSProcessInfo processInfo] environment][@"DATASTORE_HOST"];
+  settings.sslEnabled = YES;
+  if (!host) {
+    // If host is nil, there is no GoogleService-Info.plist. Check if a hexa integration test
+    // configuration is configured. The first bundle location is used by bazel builds. The
+    // second is used for github clones.
+    host = @"localhost:8081";
+    settings.sslEnabled = YES;
+    NSLog(@"Bundle path = %@", [[NSBundle mainBundle] bundlePath]);
+    NSString *certsPath =
+    [[NSBundle mainBundle] pathForResource:@"PlugIns/Firestore_FuzzTests_iOS.xctest/CAcert"
+                                    ofType:@"pem"];
+    if (certsPath == nil) {
+      NSLog(@"Cannot connect to Hexa machine: unable to find CAcert.pem file");
+      throw std::exception();
+    }
+
+    unsigned long long fileSize =
+    [[[NSFileManager defaultManager] attributesOfItemAtPath:certsPath error:nil] fileSize];
+
+    if (fileSize == 0) {
+      NSLog(
+            @"The cert is not properly configured. Make sure setup_integration_tests.py "
+            "has been run.");
+    }
+    [GRPCCall useTestCertsPath:certsPath testName:@"test_cert_2" forHost:host];
+  }
+  settings.host = host;
+  settings.persistenceEnabled = YES;
+  settings.timestampsInSnapshotsEnabled = YES;
+  NSLog(@"Configured integration test for %@ with SSL: %@", settings.host,
+        settings.sslEnabled ? @"YES" : @"NO");
+  return settings;
+}
+
+FIRFirestore *GetHexaFirestore() {
+  NSString *persistenceKey = @"fuzzing-db-1";
+
+  FSTDispatchQueue *workerDispatchQueue = [FSTDispatchQueue
+                                           queueWith:dispatch_queue_create("com.google.firebase.firestore", DISPATCH_QUEUE_SERIAL)];
+
+  FIRSetLoggerLevel(FIRLoggerLevelDebug);
+  // HACK: FIRFirestore expects a non-nil app, but for tests we cheat.
+  FIRApp *app = nil;
+  std::unique_ptr<CredentialsProvider> credentials_provider =
+  absl::make_unique<firebase::firestore::auth::EmptyCredentialsProvider>();
+
+  FIRFirestore *firestore = [[FIRFirestore alloc] initWithProjectID:util::MakeStringView(@"fuzzing")
+                                                           database:DatabaseId::kDefault
+                                                     persistenceKey:persistenceKey
+                                                credentialsProvider:std::move(credentials_provider)
+                                                workerDispatchQueue:workerDispatchQueue
+                                                        firebaseApp:app];
+
+  firestore.settings = settings();
+
+  //[_firestores addObject:firestore];
+  return firestore;
 }
 
 // Fuzz-test the deserialization process in Firestore. The Serializer reads raw
@@ -279,6 +362,158 @@ void FuzzTestFieldValue(const uint8_t *data, size_t size) {
   }
 }
 
+void FuzzTestQuerying(const uint8_t *data, size_t size) {
+  // Cast data as an NSString.
+  NSString *string = [[NSString alloc] initWithBytes:data length:size encoding:NSUTF8StringEncoding];
+  if (string == nil) {
+    return;
+  }
+
+  NSData *bytes = [NSData dataWithBytes:data length:size];
+  //NSLog(@"Bytes (%ld) = %@ String = %@", size, [bytes description], string);
+
+  // Fixed collection.
+  FIRCollectionReference *col = [firestore collectionWithPath:@"fuzzing"];
+
+  // Initialize all expectations as an array.
+  NSMutableArray *expectations = [NSMutableArray array];
+
+  /*/ ---------------------------------------------------------------------------
+  @try {
+    // Test 1: Get document with the string path.
+    XCTestExpectation *doc_ex = [[XCTestExpectation alloc] initWithDescription:@"document_reference"];
+    FIRDocumentReference *doc = [restaurants documentWithPath:string];
+    [expectations addObject:doc_ex];
+    [doc getDocumentWithCompletion:^(FIRDocumentSnapshot *snapshot, NSError *error) {
+      //NSLog(@"document exists? %d", [snapshot exists]);
+      [doc_ex fulfill];
+    }];
+  } @catch (...) {}
+  //*/
+
+
+  /* ---------------------------------------------------------------------------
+  @try {
+    // Test 2: Create document with the data, retrieve it, then delete it.
+   NSDictionary *dictionary=[NSJSONSerialization
+       JSONObjectWithData:bytes
+       options:NSJSONReadingMutableLeaves
+       error:nil];
+    if (dictionary) {
+      NSLog(@"^^^ writing doc ^^^");
+      // Create a new doc reference with auto id.
+      FIRDocumentReference *new_doc = [col documentWithAutoID];
+
+      XCTestExpectation *new_ex = [[XCTestExpectation alloc] initWithDescription:@"create_doc"];
+      [expectations addObject:new_ex];
+      [new_doc setData:dictionary completion:^(NSError * _Nullable error) {
+        [new_ex fulfill];
+      }];
+
+      XCTestExpectation *query_ex = [[XCTestExpectation alloc] initWithDescription:@"query_doc"];
+      [expectations addObject:query_ex];
+      [new_doc getDocumentWithSource:FIRFirestoreSourceServer completion:^(FIRDocumentSnapshot * _Nullable snapshot, NSError * _Nullable error) {
+        [query_ex fulfill];
+      }];
+
+      XCTestExpectation *delete_ex = [[XCTestExpectation alloc] initWithDescription:@"delete_doc"];
+      [expectations addObject:delete_ex];
+      [new_doc deleteDocumentWithCompletion:^(NSError * _Nullable error) {
+        [delete_ex fulfill];
+      }];
+    }
+  } @catch (...) {}
+  //*///------------------------------------------------------------------------
+
+  /*-------------------------------------------------------- queryOrderByField
+  @try {
+    XCTestExpectation *query_ex = [[XCTestExpectation alloc] initWithDescription:@"querying"];
+    [expectations addObject:query_ex];
+    [[restaurants queryOrderedByField:string]
+     getDocumentsWithCompletion:^(FIRQuerySnapshot * _Nullable snapshot, NSError * _Nullable error) {
+       [query_ex fulfill];
+     }
+     ];
+  } @catch (...) {}
+  //*///------------------------------------------------------------------------
+
+  //*-------------------------------------------------------- collectionWithPath
+  @try {
+    XCTestExpectation *ex = [[XCTestExpectation alloc] initWithDescription:@"col_ex"];
+    FIRCollectionReference *col = [firestore collectionWithPath:string];
+    FIRDocumentReference *doc = [col documentWithAutoID];
+    [expectations addObject:ex];
+    [doc getDocumentWithCompletion:^(FIRDocumentSnapshot *snapshot, NSError *error) {
+      [ex fulfill];
+      NSLog(@"1. collectionWithPath snapshot exists? %d", snapshot.exists? 1 : 0);
+    }];
+  } @catch (NSException *e) {
+    //NSLog(@"1. exception: %@", [e reason]);
+  } @catch (...) {
+    //NSLog(@"1. Something went really wrong");
+  }
+  //*///------------------------------------------------------------------------
+
+  //*---------------------------------------------------------- documentWithPath
+  @try {
+    XCTestExpectation *ex = [[XCTestExpectation alloc] initWithDescription:@"doc_ex"];
+    FIRDocumentReference *doc = [col documentWithPath:string];
+    [expectations addObject:ex];
+    [doc getDocumentWithCompletion:^(FIRDocumentSnapshot *snapshot, NSError *error) {
+      [ex fulfill];
+      NSLog(@"2. Document exists? %d", snapshot.exists? 1 : 0);
+    }];
+  } @catch (NSException *e) {
+    //NSLog(@"2. exception: %@", [e reason]);
+  } @catch (...) {
+    //NSLog(@"2. Something went really wrong");
+  }
+  //*///------------------------------------------------------------------------
+
+
+  //*---------------------------------- documentWithPath directly from firestore
+  @try {
+    XCTestExpectation *ex = [[XCTestExpectation alloc] initWithDescription:@"doc_ex2"];
+    [expectations addObject:ex];
+    [[firestore documentWithPath:string]
+     getDocumentWithCompletion:^(FIRDocumentSnapshot * _Nullable snapshot, NSError * _Nullable error) {
+      [ex fulfill];
+      NSLog(@"3. Document exists? %d", snapshot.exists? 1 : 0);
+    }];
+  } @catch (NSException *e) {
+    //NSLog(@"3. exception: %@", [e reason]);
+  } @catch (...) {
+    //NSLog(@"3. Something went really wrong");
+  }
+  //*///------------------------------------------------------------------------
+
+  Boolean string_contains_null = NO;
+  for (int i=0; i<size; i++) {
+    if (data[i] == 0x00) {
+      string_contains_null = YES;
+    }
+  }
+
+  //*-----------------------------------------------------------
+  if (!string_contains_null) {
+    @try {
+      XCTestExpectation *ex = [[XCTestExpectation alloc] initWithDescription:@"q1_ex"];
+      [expectations addObject:ex];
+      [[col queryWhereField:string isEqualTo:string]
+       getDocumentsWithCompletion:^(FIRQuerySnapshot * _Nullable snapshot, NSError * _Nullable error) {
+         [ex fulfill];
+       }];
+    } @catch (NSException *e) {
+      //NSLog(@"4. exception: %@", [e reason]);
+    } @catch (...) {
+      //NSLog(@"4 Something went really wrong");
+    }
+  }
+  //*///------------------------------------------------------------------------
+
+  [XCTWaiter waitForExpectations:expectations timeout:2 enforceOrder:NO];
+}
+
 // Contains the code to be fuzzed. Called by the fuzzing library with
 // different argument values for `data` and `size`.
 int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
@@ -286,8 +521,8 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
   //FuzzTestFieldPath(data, size);
   //FuzzTestCollectionReference(data, size);
   //FuzzTestFIRQuery(data, size);
-  FuzzTestFieldValue(data, size);
-  //FuzzTestBufferedWriter(data, size);  // Doesn't work.
+  //FuzzTestFieldValue(data, size);
+  FuzzTestQuerying(data, size);
   return 0;
 }
 
@@ -313,23 +548,31 @@ int RunFuzzTestingMain() {
       // No memory limit for libFuzzer.
       const_cast<char *>("-rss_limit_mb=0"),
       // Treat some new values as new coverage.
-      const_cast<char *>("-use_value_profile=1")  ,
+      const_cast<char *>("-use_value_profile=0")  ,
       // Print stats at exit.
       const_cast<char *>("-print_final_stats=1"),
       // Max size should be high to generate large input.
-      const_cast<char *>("-max_len=10000"),
+      const_cast<char *>("-max_len=100000000"),
+
+      //const_cast<char *>("-detect_leaks=0"),  // disable outside testing ---.
 
       // Only ASCII.
       //const_cast<char *>("-only_ascii=1"),
 
       // Limit the runs/time to collect coverage statistics.
-      //const_cast<char *>("-runs=1000000"),
-      const_cast<char *>("-max_total_time=100"),
+      //const_cast<char *>("-runs=10"),
+      //const_cast<char *>("-max_total_time=100"),
 
       // Use a dictionary and a corpus.
       // Serialization
       //const_cast<char *>("-dict=/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/Serialization/serialization.dict"),
       //const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/Serialization/BinaryProtos")
+
+      // Querying backend.
+      const_cast<char *>("-dict=/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/Backend/backend.dictionary"),
+      const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/Backend/Inputs2")
+      //const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/Backend/CrashingInputs/release-nonexistent-query-no-nulls")
+      //const_cast<char *>("/tmp/crash-5ba93c9db0cff93f52b521d7420e43f6eda2784f")
 
       // FIRQuery.
       //const_cast<char *>("-dict=/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/FIRQuery/firquery.dict"),
@@ -340,9 +583,10 @@ int RunFuzzTestingMain() {
       //const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/FieldPath/Inputs")
 
       // FieldVlaue.
-      const_cast<char *>([[@"-dict=" stringByAppendingString:dictionaryFilePath] UTF8String]),
+      //const_cast<char *>([[@"-dict=" stringByAppendingString:dictionaryFilePath] UTF8String]),
                          ///Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/FieldValue/fv.dict"),
-      const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/FieldValue/Inputs")
+      //const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/FieldValue/Inputs")
+
 
       // Run specific individual crashes.
       //const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/CrashingInputs/01-SEGV")
@@ -359,7 +603,11 @@ int RunFuzzTestingMain() {
   serializer = new Serializer(database_id);
 
   // Firestore connection.
-  firestore = FSTTestFirestore();
+  // [FIRApp configure];
+  firestore =
+    // GetTestFirestore();
+    //GetFriendlyEatsFirestore();
+    GetHexaFirestore();
 
   // User data converter. No modification to the original input.
   converter = [[FSTUserDataConverter alloc]
@@ -367,6 +615,9 @@ int RunFuzzTestingMain() {
                     preConverter:^id _Nullable(id _Nullable input) {
                       return input;
                     }];
+
+  // cache
+  processedStrings = [NSMutableSet set];
 
   // Start fuzzing using libFuzzer's driver.
   return fuzzer::FuzzerDriver(&argc, &argv, LLVMFuzzerTestOneInput);
@@ -414,7 +665,7 @@ void RunSingleTesting() {
 
 
   NSArray *expectations = [NSArray arrayWithObject:ex];
-  [XCTWaiter waitForExpectations:expectations timeout:10];
+  [XCTWaiter waitForExpectations:expectations timeout:2];
 }
 
 }  // namespace

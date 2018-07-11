@@ -60,7 +60,7 @@ class FieldPath : public impl::BasePath<FieldPath> {
   /** Returns a field path that represents an empty path. */
   static const FieldPath& EmptyPath();
   /** Returns a field path that represents a document key. */
-  static const FieldPath& KeyFieldPath();
+  static  FieldPath KeyFieldPath();
 
   /** Returns a standardized string representation of this path. */
   std::string CanonicalString() const;

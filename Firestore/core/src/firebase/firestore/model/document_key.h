@@ -21,6 +21,7 @@
 #include <initializer_list>
 #include <memory>
 #include <string>
+#include <iostream>
 
 #if defined(__OBJC__)
 #import "Firestore/Source/Model/FSTDocumentKey.h"
@@ -50,6 +51,9 @@ class DocumentKey {
   /** Creates a new document key, taking ownership of the given path. */
   explicit DocumentKey(ResourcePath&& path);
 
+  ~DocumentKey() {
+    //std::cout<< "\nDocumentKey destructor ---- MINA\n";
+  }
 #if defined(__OBJC__)
   DocumentKey(FSTDocumentKey* key)  // NOLINT(runtime/explicit)
       : path_(std::make_shared<ResourcePath>(key.path)) {
