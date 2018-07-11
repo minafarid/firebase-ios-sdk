@@ -1,7 +1,7 @@
 os: osx
 osx_image: xcode9.3
 language: objective-c
-podfile: $TRAVIS_BUILD_DIR/Firestore/Example/Podfile
+podfile: Firestore/Example/Podfile
 cache:
   - bundler
   - cocoapods
