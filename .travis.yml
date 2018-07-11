@@ -168,6 +168,9 @@ jobs:
       #   - export PROJECT=Firebase &&  export PLATFORM=iOS && export METHOD=xcodebuild && ./scripts/if_changed.sh ./scripts/build.sh $PROJECT $PLATFORM  && ./scripts/if_changed.sh ./scripts/install_prereqs.sh
       #   - export PROJECT=Firestore && export PLATFORM=iOS && export METHOD=xcodebuild && export SANITIZERS=asan && ./scripts/if_changed.sh ./scripts/install_prereqs.sh && ./scripts/if_changed.sh ./scripts/build.sh $PROJECT $PLATFORM $METHOD
       script:
+        - npm install ios-sim -g
+        - ios-sim start --devicetypeid "com.apple.CoreSimulator.SimDeviceType.iPhone-8-Plus, 11.3"
+        - ./scripts/install_prereqs.sh
         - ./scripts/build.sh Firebase iOS xcodebuild
         - ./scripts/build.sh Firestore iOS xcodebuild
         - pwd && ls && ls Firestore/Example/ && xcodebuild -workspace Firestore.xcworkspace -scheme Firestore_FuzzTests_iOS -destination 'platform=iOS Simulator,name=iPhone 8 Plus,OS=11.3' test
