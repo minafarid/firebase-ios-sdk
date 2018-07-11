@@ -165,7 +165,7 @@ jobs:
 
     - stage: fuzz_test
       script:
-        - xcodebuild workspace ./Firestore/Example/Firestore.xcworkspace -scheme Firestore_FuzzTests_iOS -destination 'platform=iOS Simulator,name=iPhone 8 Plus,OS=11.3' test
+        - xcodebuild -workspace ./Firestore/Example/Firestore.xcworkspace -scheme Firestore_FuzzTests_iOS -destination 'platform=iOS Simulator,name=iPhone 8 Plus,OS=11.3' test
 
     # TODO(varconst): UBSan for CMake. UBSan failures are non-fatal by default,
     # need to make them fatal for the purposes of the test run.
