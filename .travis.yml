@@ -9,19 +9,19 @@ rvm: 2.3.1
 
 jobs:
   include:
-    - stage: checks
-      # This only needs to be run once, so restrict it to an arbitrary combination
-      before_install:
-        - brew install clang-format
-        - brew install swiftformat
-      script:
-        - ./scripts/check_whitespace.sh
-        - ./scripts/check_copyright.sh
-        - ./scripts/check_no_module_imports.sh
-        - ./scripts/check_test_inclusion.py
-        - ./scripts/style.sh test-only $TRAVIS_COMMIT_RANGE
-        # Google C++ style compliance
-        - ./scripts/lint.sh $TRAVIS_COMMIT_RANGE
+    # - stage: checks
+    #   # This only needs to be run once, so restrict it to an arbitrary combination
+    #   before_install:
+    #     - brew install clang-format
+    #     - brew install swiftformat
+    #   script:
+    #     - ./scripts/check_whitespace.sh
+    #     - ./scripts/check_copyright.sh
+    #     - ./scripts/check_no_module_imports.sh
+    #     - ./scripts/check_test_inclusion.py
+    #     - ./scripts/style.sh test-only $TRAVIS_COMMIT_RANGE
+    #     # Google C++ style compliance
+    #     - ./scripts/lint.sh $TRAVIS_COMMIT_RANGE
 
     # The order of builds matters (even though they are run in parallel):
     # Travis will schedule them in the same order they are listed here.
@@ -165,7 +165,7 @@ jobs:
 
     - stage: fuzz_test
       script:
-        - xcodebuild -workspace ./Firestore/Example/Firestore.xcworkspace -scheme Firestore_FuzzTests_iOS -destination 'platform=iOS Simulator,name=iPhone 8 Plus,OS=11.3' test
+        - cd Firestore/Example && pod install && xcodebuild -workspace Firestore.xcworkspace -scheme Firestore_FuzzTests_iOS -destination 'platform=iOS Simulator,name=iPhone 8 Plus,OS=11.3' test
 
     # TODO(varconst): UBSan for CMake. UBSan failures are non-fatal by default,
     # need to make them fatal for the purposes of the test run.
