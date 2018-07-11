@@ -164,9 +164,8 @@ jobs:
     #     - ./scripts/if_changed.sh ./scripts/build.sh $PROJECT $PLATFORM $METHOD
 
     - stage: fuzz_test
-      # before_install:
-      #   - export PROJECT=Firebase &&  export PLATFORM=iOS && export METHOD=xcodebuild && ./scripts/if_changed.sh ./scripts/build.sh $PROJECT $PLATFORM  && ./scripts/if_changed.sh ./scripts/install_prereqs.sh
-      #   - export PROJECT=Firestore && export PLATFORM=iOS && export METHOD=xcodebuild && export SANITIZERS=asan && ./scripts/if_changed.sh ./scripts/install_prereqs.sh && ./scripts/if_changed.sh ./scripts/build.sh $PROJECT $PLATFORM $METHOD
+      env:
+        - FUZZ=TESTING
       script:
         - npm install ios-sim -g
         - ios-sim start --devicetypeid "com.apple.CoreSimulator.SimDeviceType.iPhone-8-Plus, 11.3"
@@ -174,13 +173,15 @@ jobs:
         - PROJECT=Firestore PLATFORM=iOS  METHOD=xcodebuild ./scripts/install_prereqs.sh
         - ./scripts/build.sh Firebase iOS xcodebuild
         - ./scripts/build.sh Firestore iOS xcodebuild
-        - pwd && ls && ls Firestore/Example/ && xcodebuild -workspace Firestore.xcworkspace -scheme Firestore_FuzzTests_iOS -destination 'platform=iOS Simulator,name=iPhone 8 Plus,OS=11.3' test
+        - pwd && ls && ls Firestore/Example/ && xcodebuild -workspace Firestore/Example/Firestore.xcworkspace -scheme Firestore_FuzzTests_iOS -destination 'platform=iOS Simulator,name=iPhone 8 Plus,OS=11.3' test
 
     # TODO(varconst): UBSan for CMake. UBSan failures are non-fatal by default,
     # need to make them fatal for the purposes of the test run.
 
   # TODO(varconst): disallow sanitizers to fail once we fix all existing issues.
   allow_failures:
+    - env:
+      - FUZZ=TESTING
     - env:
       - PROJECT=Firestore PLATFORM=macOS METHOD=cmake SANITIZERS=asan
     - env:
