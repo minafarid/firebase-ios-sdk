@@ -167,14 +167,14 @@ jobs:
       env:
         - FUZZ=TESTING
       before_install:
-        - gem install cocoapods
-        - npm install ios-sim -g
-        - ios-sim start --devicetypeid "com.apple.CoreSimulator.SimDeviceType.iPhone-8-Plus, 11.3"
-        - PROJECT=Firebase  PLATFORM=iOS  METHOD=xcodebuild ./scripts/if_changed.sh ./scripts/install_prereqs.sh
-        - PROJECT=Firestore PLATFORM=iOS  METHOD=xcodebuild ./scripts/if_changed.sh ./scripts/install_prereqs.sh
+        - travis_wait gem install cocoapods
+        - travis_wait npm install ios-sim -g
+        - travis_wait ios-sim start --devicetypeid "com.apple.CoreSimulator.SimDeviceType.iPhone-8-Plus, 11.3"
+        - travis_wait PROJECT=Firebase  PLATFORM=iOS  METHOD=xcodebuild ./scripts/if_changed.sh ./scripts/install_prereqs.sh
+        - travis_wait PROJECT=Firestore PLATFORM=iOS  METHOD=xcodebuild ./scripts/if_changed.sh ./scripts/install_prereqs.sh
       script:
-        - ./scripts/if_changed.sh ./scripts/build.sh Firebase iOS xcodebuild
-        - ./scripts/if_changed.sh ./scripts/build.sh Firestore iOS xcodebuild
+        - travis_wait ./scripts/if_changed.sh ./scripts/build.sh Firebase iOS xcodebuild
+        - travis_wait ./scripts/if_changed.sh ./scripts/build.sh Firestore iOS xcodebuild
         - pwd && ls && ls Firestore/Example/ && xcodebuild -workspace Firestore/Example/Firestore.xcworkspace -scheme Firestore_FuzzTests_iOS -destination 'platform=iOS Simulator,name=iPhone 8 Plus,OS=11.3' test
 
     # TODO(varconst): UBSan for CMake. UBSan failures are non-fatal by default,
