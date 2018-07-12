@@ -175,7 +175,7 @@ jobs:
       script:
         # - ./scripts/if_changed.sh ./scripts/build.sh Firebase  iOS xcodebuild 2>&1 build_1.log
         # - ./scripts/if_changed.sh ./scripts/build.sh Firestore iOS xcodebuild 2>&1 build_2.log
-        - travis_wait ./scripts/if_changed.sh ./scripts/build.sh $PROJECT $PLATFORM $METHOD &> /dev/null
+        - ./scripts/if_changed.sh ./scripts/build.sh $PROJECT $PLATFORM $METHOD
         - pwd && ls && ls Firestore/Example/ && xcodebuild -workspace Firestore/Example/Firestore.xcworkspace -scheme Firestore_FuzzTests_iOS -destination 'platform=iOS Simulator,name=iPhone 8 Plus,OS=11.3' test
 
     # TODO(varconst): UBSan for CMake. UBSan failures are non-fatal by default,
