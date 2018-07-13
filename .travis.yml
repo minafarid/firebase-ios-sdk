@@ -169,7 +169,7 @@ jobs:
       before_install:
         - ./scripts/if_changed.sh ./scripts/install_prereqs.sh
       script:
-        - ./scripts/if_changed.sh ./scripts/build.sh $PROJECT $PLATFORM $METHOD
+        #- ./scripts/if_changed.sh ./scripts/build.sh $PROJECT $PLATFORM $METHOD
         - pwd && ls && ls Firestore/Example/
 
     # - stage: fuzz_test
