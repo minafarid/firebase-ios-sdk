@@ -14,36 +14,45 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Directory that contains the text protos to convert to binary.
-text_protos_dir="$PWD/TextProtos"
-binary_protos_dir="$PWD/BinaryProtos"
+# Converts text protos to binary protos. Text protos are retrieved from the
+# folder defined by SCRIPT_INPUT_FILE_0 and the generated binary protos are
+# stored in the folder defined by SCRIPT_OUTPUT_FILE_0. Both SCRIPT_INPUT_FILE_0
+# and SCRIPT_OUTPUT_FILE_0 are defined in the Run Script Build Phase of the
+# XCode build target Firestore_FuzzTests_iOS that executes this script. XCode
+# defines these environment variables and makes them available to the script.
+
+# Directory that contains the text protos to convert to binary protos.
+text_protos_dir="${SCRIPT_INPUT_FILE_0}"
+
+# Create a folder to write binary protos to. This is our corpus.
+binary_protos_dir="${SCRIPT_OUTPUT_FILE_0}"
+mkdir -p "${binary_protos_dir}"
+
 echo "Converting text proto files in directory: $text_protos_dir"
 echo "Writing binary proto files to directory: $binary_protos_dir"
-# Go to project root directory.
-cd ../../../../../
 
 # Run proto conversion command for each file content.
-for text_proto_file in $text_protos_dir/*
-do
-  file_content=`cat $text_proto_file`
-  file_name=$(basename -- "$text_proto_file")
+for text_proto_file in "${text_protos_dir}"/*; do
+  file_name="$(basename -- "${text_proto_file}")"
+  file_content="$(cat "${text_proto_file}")"
+
+  # Choose an appropriate message type depending on the prefix of the file.
   message_type="Value"
-  if [[ $file_name == doc-* ]]; then
+  if [[ "${file_name}" == doc-* ]]; then
     message_type="Document"
-  elif [[ $file_name == fv-* ]]; then
+  elif [[ "${file_name}" == fv-* ]]; then
     message_type="Value"
-  elif [[ $file_name == arr-* ]]; then
+  elif [[ "${file_name}" == arr-* ]]; then
     message_type="ArrayValue"
-  elif [[ $file_name == map-* ]]; then
+  elif [[ "${file_name}" == map-* ]]; then
     message_type="MapValue"
   fi
-  echo "Converting file: $file_name (type: $message_type)"
-  # TODO(minafarid): choose proper encoding based on file_name prefix.
-  echo "$file_content" \
-    | ./build/external/protobuf/src/protobuf-build/src/protoc \
-    -I./Firestore/Protos/protos \
-    -I./build/external/protobuf/src/protobuf/src \
-    --encode=google.firestore.v1beta1."$message_type" \
-    google/firestore/v1beta1/document.proto \
-    | tee "$binary_protos_dir"/"$file_name" > /dev/null
+
+  # Run the conversion.
+  echo "Converting file: ${file_name} (type: ${message_type})"
+  echo "${file_content}" \
+    | "${SRCROOT}/Pods/!ProtoCompiler/protoc" \
+    -I"${SRCROOT}/../../Firestore/Protos/protos" \
+    --encode=google.firestore.v1beta1."${message_type}" \
+    google/firestore/v1beta1/document.proto > "${binary_protos_dir}/${file_name}"
 done

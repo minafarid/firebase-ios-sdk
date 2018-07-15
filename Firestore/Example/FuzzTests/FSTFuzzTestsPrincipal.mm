@@ -545,12 +545,18 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
 
 // Simulates calling the main() function of libFuzzer (FuzzerMain.cpp).
 int RunFuzzTestingMain() {
-  // Get the dictionary file.
-  NSString *dictionaryFilePath = [[[NSBundle mainBundle] resourcePath]
-      stringByAppendingPathComponent:@"PlugIns/Firestore_FuzzTests_iOS.xctest/fv.dictionary"];
+  // Get dictionary file path from resources and convert to a program argument.
+  NSString *plugins_path = [[NSBundle mainBundle] builtInPlugInsPath];
 
-  const char *dictArg = [[[NSString stringWithCString:"-dict=" encoding:NSUTF8StringEncoding]
-      stringByAppendingString:dictionaryFilePath] UTF8String];
+  NSString *dict_location =
+  @"Firestore_FuzzTests_iOS.xctest/FuzzingResources/Serializer/serializer.dictionary";
+  NSString *dict_path = [plugins_path stringByAppendingPathComponent:dict_location];
+  const char *dict_arg = [[NSString stringWithFormat:@"-dict=%@", dict_path] UTF8String];
+
+  // Get corpus and convert to a program argument.
+  NSString *corpus_location = @"FuzzTestsCorpus";
+  NSString *corpus_path = [plugins_path stringByAppendingPathComponent:corpus_location];
+  const char *corpus_arg = [corpus_path UTF8String];
 
   // Arguments to libFuzzer main() function should be added to this array,
   // e.g., dictionaries, corpus, number of runs, jobs, etc.
@@ -575,7 +581,11 @@ int RunFuzzTestingMain() {
 
       // Limit the runs/time to collect coverage statistics.
       // const_cast<char *>("-runs=10"),
-      const_cast<char *>("-max_total_time=100")
+      const_cast<char *>("-max_total_time=10"),
+
+      const_cast<char *>(dict_arg),              // Dictionary arg.
+      const_cast<char *>(corpus_arg)             // Corpus must be the last arg.
+
 
       // Use a dictionary and a corpus.
       // Serialization
