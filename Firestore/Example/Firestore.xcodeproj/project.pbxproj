@@ -172,6 +172,8 @@
 		6E6ADB0620F3B6DB0027079D /* fuzzing_ignore.txt in Resources */ = {isa = PBXBuildFile; fileRef = 6E6ADB0420F3B6DB0027079D /* fuzzing_ignore.txt */; };
 		6E6ADB0820F3BC080027079D /* fuzzing.supp in Resources */ = {isa = PBXBuildFile; fileRef = 6E6ADB0720F3BC080027079D /* fuzzing.supp */; };
 		6E6ADB0920F3BC080027079D /* fuzzing.supp in Resources */ = {isa = PBXBuildFile; fileRef = 6E6ADB0720F3BC080027079D /* fuzzing.supp */; };
+		6E8AC31320FBD72B00474E36 /* FuzzingResources in Resources */ = {isa = PBXBuildFile; fileRef = 6E8AC31220FBD72B00474E36 /* FuzzingResources */; };
+		6E8AC31420FBD8C700474E36 /* FuzzingResources in Resources */ = {isa = PBXBuildFile; fileRef = 6E8AC31220FBD72B00474E36 /* FuzzingResources */; };
 		6EDD3B4620BF247500C33877 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F58D195388D20070C39A /* Foundation.framework */; };
 		6EDD3B4820BF247500C33877 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F591195388D20070C39A /* UIKit.framework */; };
 		6EDD3B4920BF247500C33877 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F5AF195388D20070C39A /* XCTest.framework */; };
@@ -464,6 +466,7 @@
 		6E6ADB0120F3AA290027079D /* CAcert.pem */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CAcert.pem; sourceTree = "<group>"; };
 		6E6ADB0420F3B6DB0027079D /* fuzzing_ignore.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = fuzzing_ignore.txt; sourceTree = "<group>"; };
 		6E6ADB0720F3BC080027079D /* fuzzing.supp */ = {isa = PBXFileReference; lastKnownFileType = text; path = fuzzing.supp; sourceTree = "<group>"; };
+		6E8AC31220FBD72B00474E36 /* FuzzingResources */ = {isa = PBXFileReference; lastKnownFileType = folder; path = FuzzingResources; sourceTree = "<group>"; };
 		6EDD3B5B20BF247500C33877 /* Firestore_FuzzTests_iOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Firestore_FuzzTests_iOS.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		6EDD3B5C20BF247500C33877 /* Firestore_FuzzTests_iOS-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Firestore_FuzzTests_iOS-Info.plist"; sourceTree = "<group>"; };
 		6EDD3B5E20BF24D000C33877 /* FSTFuzzTestsPrincipal.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = FSTFuzzTestsPrincipal.mm; sourceTree = "<group>"; };
@@ -952,6 +955,7 @@
 		6EDD3B5D20BF24A700C33877 /* FuzzTests */ = {
 			isa = PBXGroup;
 			children = (
+				6E8AC31220FBD72B00474E36 /* FuzzingResources */,
 				6E6ADB0120F3AA290027079D /* CAcert.pem */,
 				6E19D6C820EBCCB200D33498 /* Dictionaries */,
 				6EDD3B5E20BF24D000C33877 /* FSTFuzzTestsPrincipal.mm */,
@@ -1399,6 +1403,7 @@
 				6E6ADB0220F3AA2A0027079D /* CAcert.pem in Resources */,
 				6E5E349720EC04F400BD0DCF /* GoogleService-Info.plist in Resources */,
 				71719F9F1E33DC2100824A3D /* LaunchScreen.storyboard in Resources */,
+				6E8AC31320FBD72B00474E36 /* FuzzingResources in Resources */,
 				6003F598195388D20070C39A /* InfoPlist.strings in Resources */,
 				6E6ADB0820F3BC080027079D /* fuzzing.supp in Resources */,
 			);
@@ -1427,6 +1432,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6E8AC31420FBD8C700474E36 /* FuzzingResources in Resources */,
 				6E6ADB0620F3B6DB0027079D /* fuzzing_ignore.txt in Resources */,
 				6E19D6C720EBCCA200D33498 /* fv.dictionary in Resources */,
 				6E5E349620EC045C00BD0DCF /* GoogleService-Info.plist in Resources */,

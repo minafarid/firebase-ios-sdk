@@ -558,6 +558,10 @@ int RunFuzzTestingMain() {
   NSString *corpus_path = [plugins_path stringByAppendingPathComponent:corpus_location];
   const char *corpus_arg = [corpus_path UTF8String];
 
+  NSLog(@"plugins_path = %@", plugins_path);
+  NSLog(@"dict_path = %@", dict_path);
+  NSLog(@"corpus_location = %@", corpus_path);
+
   // Arguments to libFuzzer main() function should be added to this array,
   // e.g., dictionaries, corpus, number of runs, jobs, etc.
   char *program_args[] = {
@@ -643,10 +647,10 @@ int RunFuzzTestingMain() {
 
   // Firestore connection.
   // [FIRApp configure];
-  firestore =
+  //firestore =
       // GetTestFirestore();
       // GetFriendlyEatsFirestore();
-      GetHexaFirestore();
+      //GetHexaFirestore();
 
   // User data converter. No modification to the original input.
   converter = [[FSTUserDataConverter alloc] initWithDatabaseID:&database_id
