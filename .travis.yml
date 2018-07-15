@@ -167,10 +167,12 @@ jobs:
       env:
         - PROJECT=Firestore PLATFORM=iOS METHOD=xcodebuild
       before_install:
+        - gem install xcpretty-travis-formatter
         - ./scripts/if_changed.sh ./scripts/install_prereqs.sh
       script:
         #- ./scripts/if_changed.sh ./scripts/build.sh $PROJECT $PLATFORM $METHOD
-        - pwd && ls && ls Firestore/Example && xcodebuild -workspace Firestore/Example/Firestore.xcworkspace -scheme Firestore_FuzzTests_iOS -destination 'platform=iOS Simulator,name=iPhone 8 Plus,OS=11.3' test | xcpretty
+        - xcodebuild -workspace Firestore/Example/Firestore.xcworkspace -scheme Firestore_FuzzTests_iOS -destination 'platform=iOS Simulator,name=iPhone 8 Plus,OS=11.3' build | tee xcodebuild.log | xcpretty -c -f `xcpretty-travis-formatter` && exit ${PIPESTATUS[0]}
+        - xcodebuild -workspace Firestore/Example/Firestore.xcworkspace -scheme Firestore_FuzzTests_iOS -destination 'platform=iOS Simulator,name=iPhone 8 Plus,OS=11.3' test
 
     # - stage: fuzz_test
     #   env:
