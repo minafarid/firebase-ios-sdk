@@ -163,6 +163,7 @@
 		61F72C5620BC48FD001A68CB /* serializer_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = 61F72C5520BC48FD001A68CB /* serializer_test.cc */; };
 		6E59498D20F55BA800ECD9A5 /* FuzzingResources in Resources */ = {isa = PBXBuildFile; fileRef = 6ED6DEA120F5502700FC6076 /* FuzzingResources */; };
 		6ED8905F20FD1D6500F6BA1B /* CAcert.pem in Resources */ = {isa = PBXBuildFile; fileRef = 6ED8905E20FD1D6500F6BA1B /* CAcert.pem */; };
+		6ED8906020FD2F1400F6BA1B /* CAcert.pem in Resources */ = {isa = PBXBuildFile; fileRef = 6ED8905E20FD1D6500F6BA1B /* CAcert.pem */; };
 		6EDD3B4620BF247500C33877 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F58D195388D20070C39A /* Foundation.framework */; };
 		6EDD3B4820BF247500C33877 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F591195388D20070C39A /* UIKit.framework */; };
 		6EDD3B4920BF247500C33877 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F5AF195388D20070C39A /* XCTest.framework */; };
@@ -1359,6 +1360,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6ED8906020FD2F1400F6BA1B /* CAcert.pem in Resources */,
 				6E59498D20F55BA800ECD9A5 /* FuzzingResources in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
