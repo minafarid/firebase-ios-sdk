@@ -173,7 +173,7 @@ jobs:
         #- ./scripts/if_changed.sh ./scripts/build.sh $PROJECT $PLATFORM $METHOD
         - echo "************************************"
         - echo "MINAZZ"
-        - xcodebuild -quiet -workspace Firestore/Example/Firestore.xcworkspace -scheme Firestore_FuzzTests_iOS -destination 'platform=iOS Simulator,name=iPhone 8 Plus,OS=11.3' build; xcodebuild -workspace Firestore/Example/Firestore.xcworkspace -scheme Firestore_FuzzTests_iOS -destination 'platform=iOS Simulator,name=iPhone 8 Plus,OS=11.3' test
+        - xcodebuild -quiet -workspace Firestore/Example/Firestore.xcworkspace -scheme Firestore_FuzzTests_iOS -destination 'platform=iOS Simulator,name=iPhone 8 Plus,OS=11.3' test; xcodebuild -workspace Firestore/Example/Firestore.xcworkspace -scheme Firestore_FuzzTests_iOS -destination 'platform=iOS Simulator,name=iPhone 8 Plus,OS=11.3' test
         # - xcodebuild -workspace Firestore/Example/Firestore.xcworkspace -scheme Firestore_FuzzTests_iOS -destination 'platform=iOS Simulator,name=iPhone 8 Plus,OS=11.3' test
         - echo "************************************"
         - echo "FARIDZZZ"
