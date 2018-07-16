@@ -584,8 +584,8 @@ int RunFuzzTestingMain() {
       // const_cast<char *>("-only_ascii=1"),
 
       // Limit the runs/time to collect coverage statistics.
-      // const_cast<char *>("-runs=10"),
-      const_cast<char *>("-max_total_time=10"),
+      const_cast<char *>("-runs=10"),
+      // const_cast<char *>("-max_total_time=10"),
 
       const_cast<char *>(dict_arg),              // Dictionary arg.
       const_cast<char *>(corpus_arg)             // Corpus must be the last arg.
