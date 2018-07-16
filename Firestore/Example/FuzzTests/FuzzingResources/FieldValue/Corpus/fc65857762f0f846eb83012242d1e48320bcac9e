@@ -1,0 +1,35 @@
+{
+  "coord": {
+    "lon": -0.13,
+    "lat": 51},
+  "weather": [
+    { "id": 301,
+      },
+    {
+      "id": 741,
+    "main": "Fog",
+      "description": "fog",
+      "icon": "50n"
+    }
+  ],
+  "base": "stations",
+  "main": {
+    "temp": 281.87,"pressure": 2,
+    "humidity": 100,
+    "tp_min": 281.15,
+    "temp_max": 283.15
+  },
+  "visibility": 2900,
+"clouds": {
+    "all": 90
+  },
+  "dt": 389040,
+  "sys": {
+    "type": 0,
+    "sunrise": 1483776244,
+    "sunset": 1483805443
+  },
+  "id": 2643743,
+  "name": "London",  
+"cod": 200
+}
