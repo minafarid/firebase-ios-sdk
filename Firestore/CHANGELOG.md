@@ -1,4 +1,19 @@
 # Unreleased
+- [feature] Added `FieldValue.arrayUnion()` and `FieldValue.arrayRemove()` to
+  atomically add and remove elements from an array field in a document.
+- [feature] Added `whereField(arrayContains:)` query filter to find
+  documents where an array field contains a specific element.
+- [fixed] Fixed compilation with older Xcode versions (#1517).
+
+# v0.12.5
+- [changed] Internal improvements.
+
+# v0.12.4
+- [fixed] `setData` methods taking `mergeFields:` arguments can now delete
+  fields using `FieldValue.delete()`.
+- [fixed] Firestore will now recover from auth token expiration when the system
+  clock is wrong.
+- [fixed] Fixed compilation with older Xcode versions (#1366).
 
 # v0.12.3
 - [changed] Internal improvements.
