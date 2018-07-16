@@ -577,46 +577,43 @@ int RunFuzzTestingMain() {
   // Get dictionary file path from resources and convert to a program argument.
   NSString *plugins_path = [[NSBundle mainBundle] builtInPlugInsPath];
 
-  NSString *dict_location = @"Firestore_FuzzTests_iOS.xctest/FuzzingResources";
+  NSString *resources_location = @"Firestore_FuzzTests_iOS.xctest/FuzzingResources";
+  NSString *dict_location;
+  NSString *corpus_location;
 
   switch (fuzzing_target) {
     case SERIALIZER:
-      dict_location = [dict_location stringByAppendingPathComponent:@"Serializer/serializer.dictionary"]
+      dict_location = [resources_location stringByAppendingPathComponent:@"Serializer/serializer.dictionary"];
+      corpus_location = @"FuzzTestsCorpus";
       break;
+    case COLLECTION_REFERENCE:  // Uses FieldPath for now.
     case FIELD_PATH:
-      FuzzTestFieldPath(data, size);
+      dict_location = [resources_location stringByAppendingPathComponent:@"FieldPath/fieldpath.dictionary"];
+      corpus_location = [resources_location stringByAppendingPathComponent:@"FieldPath/Corpus"];
       break;
     case FIELD_VALUE:
-      FuzzTestFieldValue(data, size);
-      break;
-    case COLLECTION_REFERENCE:
-      FuzzTestCollectionReference(data, size);
+      dict_location = [resources_location stringByAppendingPathComponent:@"FieldValue/fieldvalue.dictionary"];
+      corpus_location = [resources_location stringByAppendingPathComponent:@"FieldValue/Corpus"];
       break;
     case FIRQUERY:
-      FuzzTestFIRQuery(data, size);
+      dict_location = [resources_location stringByAppendingPathComponent:@"FIRQuery/firquery.dictionary"];
+      corpus_location = [resources_location stringByAppendingPathComponent:@"FIRQuery/Corpus"];
       break;
     case BACKEND:
-      FuzzTestQuerying(data, size);
+      dict_location = [resources_location stringByAppendingPathComponent:@"Backend/backend.dictionary"];
+      corpus_location = [resources_location stringByAppendingPathComponent:@"Backend/Corpus"];
       break;
     default:
-      NSLog(@"Error - invalid fuzzing target: %@", fuzzing_target);
+      NSLog(@"Error - invalid fuzzing target: %ud", fuzzing_target);
       return 0;
   }
 
-
-   =
-  ;
+  // Convert dictionary and corpus locations into paths and program arguments.
   NSString *dict_path = [plugins_path stringByAppendingPathComponent:dict_location];
-  const char *dict_arg = [[NSString stringWithFormat:@"-dict=%@", dict_path] UTF8String];
-
-  // Get corpus and convert to a program argument.
-  NSString *corpus_location = @"FuzzTestsCorpus";
   NSString *corpus_path = [plugins_path stringByAppendingPathComponent:corpus_location];
-  const char *corpus_arg = [corpus_path UTF8String];
 
-  NSLog(@"plugins_path = %@", plugins_path);
-  NSLog(@"dict_path = %@", dict_path);
-  NSLog(@"corpus_location = %@", corpus_path);
+  const char *dict_arg = [[NSString stringWithFormat:@"-dict=%@", dict_path] UTF8String];
+  const char *corpus_arg = [corpus_path UTF8String];
 
   // Arguments to libFuzzer main() function should be added to this array,
   // e.g., dictionaries, corpus, number of runs, jobs, etc.
@@ -632,67 +629,17 @@ int RunFuzzTestingMain() {
       // Print stats at exit.
       const_cast<char *>("-print_final_stats=1"),
       // Max size should be high to generate large input.
-      const_cast<char *>("-max_len=100000000"),
+      const_cast<char *>("-max_len=1000000"),
 
-      // const_cast<char *>("-detect_leaks=0"),  // disable outside testing ---.
-
-      // Only ASCII.
+      // const_cast<char *>("-detect_leaks=0"),
       // const_cast<char *>("-only_ascii=1"),
 
       // Limit the runs/time to collect coverage statistics.
-      const_cast<char *>("-runs=1000"),
+      const_cast<char *>("-runs=100"),
       // const_cast<char *>("-max_total_time=10"),
 
       const_cast<char *>(dict_arg),              // Dictionary arg.
       const_cast<char *>(corpus_arg)             // Corpus must be the last arg.
-
-
-      // Use a dictionary and a corpus.
-      // Serialization
-      // const_cast<char
-      // *>("-dict=/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/Serialization/serialization.dict"),
-      // const_cast<char
-      // *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/Serialization/BinaryProtos")
-
-      // Querying backend.
-      // const_cast<char
-      // *>("-dict=/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/"
-      //                   "FuzzTests/Corpus/Backend/backend.dictionary"),
-      // const_cast<char *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/"
-      //                   "FuzzTests/Corpus/Backend/Inputs")
-      // const_cast<char
-      // *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/Backend/CrashingInputs/release-nonexistent-query-no-nulls")
-      // const_cast<char *>("/tmp/crash-5ba93c9db0cff93f52b521d7420e43f6eda2784f")
-
-      // FIRQuery.
-      // const_cast<char
-      // *>("-dict=/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/FIRQuery/firquery.dict"),
-      // const_cast<char
-      // *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/FIRQuery/Inputs")
-
-      // FieldPath
-      // const_cast<char
-      // *>("-dict=/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/FieldPath/fieldpath.dict"),
-      // const_cast<char
-      // *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/FieldPath/Inputs")
-
-      // FieldVlaue.
-      // const_cast<char *>([[@"-dict=" stringByAppendingString:dictionaryFilePath] UTF8String]),
-      /// Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/FieldValue/fv.dict"),
-      // const_cast<char
-      // *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/FieldValue/Inputs")
-
-      // Run specific individual crashes.
-      // const_cast<char
-      // *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/CrashingInputs/01-SEGV")
-      // const_cast<char
-      // *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/CrashingInputs/02-StackOverflow")
-      // const_cast<char
-      // *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/CrashingInputs/03-StackBufferOverflow")
-      // const_cast<char
-      // *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/CrashingInputs/04-SIGABRT")
-      // const_cast<char
-      // *>("/Users/minafarid/git/firebase-ios-sdk-minafarid/Firestore/Example/FuzzTests/Corpus/FIRQuery/CrashingInputs/01-NSPredicate-flex_scanner_jammed")
   };
   char **argv = program_args;
   int argc = sizeof(program_args) / sizeof(program_args[0]);
