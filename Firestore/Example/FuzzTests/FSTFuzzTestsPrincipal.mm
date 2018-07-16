@@ -52,8 +52,6 @@ using firebase::firestore::model::ResourcePath;
 
 namespace {
 
-static FIRFirestore *firestore;
-
 enum FuzzingTarget {
   SERIALIZER = 0,
   FIELD_PATH = 1,
@@ -63,7 +61,7 @@ enum FuzzingTarget {
   BACKEND = 5
 };
 
-static FuzzingTarget fuzzing_target = SERIALIZER;
+static FuzzingTarget fuzzing_target = BACKEND;
 
 NSArray *GetPossibleValuesForBytes(const uint8_t *data, size_t size) {
   NSMutableArray *vals = [[NSMutableArray alloc] init];
@@ -224,6 +222,7 @@ void FuzzTestFieldPath(const uint8_t *data, size_t size) {
 
 // Fuzz test creating collection reference.
 void FuzzTestCollectionReference(const uint8_t *data, size_t size) {
+  static FIRFirestore *firestore = GetHexaFirestore();
   @autoreleasepool {
     NSData *d = [NSData dataWithBytes:data length:size];
     NSString *string = [[NSString alloc] initWithData:d encoding:NSUTF8StringEncoding];
@@ -253,6 +252,12 @@ void FuzzTestDeserialization(const uint8_t *data, size_t size) {
       // the deserialization might throw an error as intended. Fuzzing focuses on
       // runtime errors that are detected by the sanitizers.
     }
+
+    @try {
+      serializer.DecodeMaybeDocument(data, size);
+    } @catch (...) {
+      // Ignore caught exceptions.
+    }
   }
 }
 
@@ -269,7 +274,7 @@ void FuzzTestFIRQuery(const uint8_t *data, size_t size) {
     @try {
       ResourcePath resource_path = ResourcePath::FromString(firebase::firestore::util::MakeStringView(string));
       FSTQuery *fst_q = [FSTQuery queryWithPath:resource_path];
-      FIRQuery *fir_q = [FIRQuery referenceWithQuery:fst_q firestore:firestore];
+      FIRQuery *fir_q = [FIRQuery referenceWithQuery:fst_q firestore:nil];
 
       NSPredicate *predicate = [NSPredicate predicateWithFormat:string];
       FIRQuery *q0 = [fir_q queryFilteredUsingPredicate:predicate];
@@ -300,6 +305,7 @@ void FuzzTestFIRQuery(const uint8_t *data, size_t size) {
 
 
 void FuzzTestBackend(const uint8_t *data, size_t size) {
+  static FIRFirestore *firestore = GetHexaFirestore();
   // Cast data as an NSString.
   NSString *string =
   [[NSString alloc] initWithBytes:data length:size encoding:NSUTF8StringEncoding];
@@ -537,13 +543,15 @@ int RunFuzzTestingMain() {
       const_cast<char *>("-use_value_profile=1"),
       const_cast<char *>("-print_final_stats=1"),
       const_cast<char *>("-max_len=1000000"),
+      //const_cast<char *>("-runs=100"),
+      // const_cast<char *>("-max_total_time=10"),
       const_cast<char *>(dict_arg),                  // Dictionary arg.
       const_cast<char *>(corpus_arg)                 // Corpus arg must be last.
   };
   char **argv = program_args;
   int argc = sizeof(program_args) / sizeof(program_args[0]);
 
-  firestore = GetHexaFirestore();
+
 
   // Start fuzzing using libFuzzer's driver.
   return fuzzer::FuzzerDriver(&argc, &argv, LLVMFuzzerTestOneInput);
