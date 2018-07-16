@@ -163,7 +163,6 @@
 		618BBEB020B89AAC00B5BCE7 /* http.pb.cc in Sources */ = {isa = PBXBuildFile; fileRef = 618BBE9720B89AAC00B5BCE7 /* http.pb.cc */; };
 		618BBEB120B89AAC00B5BCE7 /* status.pb.cc in Sources */ = {isa = PBXBuildFile; fileRef = 618BBE9920B89AAC00B5BCE7 /* status.pb.cc */; };
 		61F72C5620BC48FD001A68CB /* serializer_test.cc in Sources */ = {isa = PBXBuildFile; fileRef = 61F72C5520BC48FD001A68CB /* serializer_test.cc */; };
-		6E19D6C720EBCCA200D33498 /* fv.dictionary in Resources */ = {isa = PBXBuildFile; fileRef = 6E19D6C620EBCCA200D33498 /* fv.dictionary */; };
 		6E5E349620EC045C00BD0DCF /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 6E5E349520EC045C00BD0DCF /* GoogleService-Info.plist */; };
 		6E5E349720EC04F400BD0DCF /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 6E5E349520EC045C00BD0DCF /* GoogleService-Info.plist */; };
 		6E6ADB0220F3AA2A0027079D /* CAcert.pem in Resources */ = {isa = PBXBuildFile; fileRef = 6E6ADB0120F3AA290027079D /* CAcert.pem */; };
@@ -461,7 +460,6 @@
 		618BBE9920B89AAC00B5BCE7 /* status.pb.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = status.pb.cc; sourceTree = "<group>"; };
 		618BBE9A20B89AAC00B5BCE7 /* status.pb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = status.pb.h; sourceTree = "<group>"; };
 		61F72C5520BC48FD001A68CB /* serializer_test.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = serializer_test.cc; sourceTree = "<group>"; };
-		6E19D6C620EBCCA200D33498 /* fv.dictionary */ = {isa = PBXFileReference; lastKnownFileType = text; path = fv.dictionary; sourceTree = "<group>"; };
 		6E5E349520EC045C00BD0DCF /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		6E6ADB0120F3AA290027079D /* CAcert.pem */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CAcert.pem; sourceTree = "<group>"; };
 		6E6ADB0420F3B6DB0027079D /* fuzzing_ignore.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = fuzzing_ignore.txt; sourceTree = "<group>"; };
@@ -944,20 +942,11 @@
 			path = rpc;
 			sourceTree = "<group>";
 		};
-		6E19D6C820EBCCB200D33498 /* Dictionaries */ = {
-			isa = PBXGroup;
-			children = (
-				6E19D6C620EBCCA200D33498 /* fv.dictionary */,
-			);
-			path = Dictionaries;
-			sourceTree = "<group>";
-		};
 		6EDD3B5D20BF24A700C33877 /* FuzzTests */ = {
 			isa = PBXGroup;
 			children = (
 				6E8AC31220FBD72B00474E36 /* FuzzingResources */,
 				6E6ADB0120F3AA290027079D /* CAcert.pem */,
-				6E19D6C820EBCCB200D33498 /* Dictionaries */,
 				6EDD3B5E20BF24D000C33877 /* FSTFuzzTestsPrincipal.mm */,
 				6E5E349520EC045C00BD0DCF /* GoogleService-Info.plist */,
 				6EDD3B5C20BF247500C33877 /* Firestore_FuzzTests_iOS-Info.plist */,
@@ -1434,7 +1423,6 @@
 			files = (
 				6E8AC31420FBD8C700474E36 /* FuzzingResources in Resources */,
 				6E6ADB0620F3B6DB0027079D /* fuzzing_ignore.txt in Resources */,
-				6E19D6C720EBCCA200D33498 /* fv.dictionary in Resources */,
 				6E5E349620EC045C00BD0DCF /* GoogleService-Info.plist in Resources */,
 				6E6ADB0320F3AF590027079D /* CAcert.pem in Resources */,
 				6E6ADB0920F3BC080027079D /* fuzzing.supp in Resources */,

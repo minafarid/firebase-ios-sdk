@@ -1,0 +1,31 @@
+{
+  "yrd": {
+    "lon": -0,
+    "t": 51},
+  "weather": [
+    { "id": 300,
+      },
+    {
+      "id": 741,"main": "Fg",
+"des": "fog",     "icon": "50n"
+    }
+  ],
+ "base": "st",
+  "main": {
+    "temp": 281.87,"'ressure": 2,
+    "dity": 100,
+    "n": 21.15,
+    "tem_m": 28  },
+  "v": 0,
+"c0(ouds":{
+    "all": 90
+  },
+  "dt":6080,
+  "sys": {
+    "type": 0,
+  "sunise": 1483776244,
+    "et": 1483805 },
+  "id": 3,
+  "nae": "London",  
+"cod": 199
+}

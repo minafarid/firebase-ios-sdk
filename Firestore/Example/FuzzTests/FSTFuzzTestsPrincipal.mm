@@ -65,6 +65,17 @@ static FSTBufferedWriter *writer;
 static FSTUserDataConverter *converter;
 static NSMutableSet *processedStrings;
 
+enum FuzzingTarget {
+  SERIALIZER = 0,
+  FIELD_PATH = 1,
+  FIELD_VALUE = 2,
+  COLLECTION_REFERENCE = 3,
+  FIRQUERY = 4,
+  BACKEND = 5
+};
+
+static FuzzingTarget fuzzing_target = SERIALIZER;
+
 FIRFirestore *GetFriendlyEatsFirestore() {
   if (firestore != nil) {
     return firestore;
@@ -534,12 +545,30 @@ void FuzzTestQuerying(const uint8_t *data, size_t size) {
 // Contains the code to be fuzzed. Called by the fuzzing library with
 // different argument values for `data` and `size`.
 int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
-  FuzzTestDeserialization(data, size);
-  // FuzzTestFieldPath(data, size);
-  // FuzzTestCollectionReference(data, size);
-  // FuzzTestFIRQuery(data, size);
-  // FuzzTestFieldValue(data, size);
-  // FuzzTestQuerying(data, size);
+  switch (fuzzing_target) {
+    case SERIALIZER:
+      FuzzTestDeserialization(data, size);
+      break;
+    case FIELD_PATH:
+      FuzzTestFieldPath(data, size);
+      break;
+    case FIELD_VALUE:
+      FuzzTestFieldValue(data, size);
+      break;
+    case COLLECTION_REFERENCE:
+      FuzzTestCollectionReference(data, size);
+      break;
+    case FIRQUERY:
+      FuzzTestFIRQuery(data, size);
+      break;
+    case BACKEND:
+      FuzzTestQuerying(data, size);
+      break;
+    default:
+      NSLog(@"Error - invalid fuzzing target: %ud", fuzzing_target);
+      break;
+  }
+
   return 0;
 }
 
@@ -548,8 +577,35 @@ int RunFuzzTestingMain() {
   // Get dictionary file path from resources and convert to a program argument.
   NSString *plugins_path = [[NSBundle mainBundle] builtInPlugInsPath];
 
-  NSString *dict_location =
-  @"Firestore_FuzzTests_iOS.xctest/FuzzingResources/Serializer/serializer.dictionary";
+  NSString *dict_location = @"Firestore_FuzzTests_iOS.xctest/FuzzingResources";
+
+  switch (fuzzing_target) {
+    case SERIALIZER:
+      dict_location = [dict_location stringByAppendingPathComponent:@"Serializer/serializer.dictionary"]
+      break;
+    case FIELD_PATH:
+      FuzzTestFieldPath(data, size);
+      break;
+    case FIELD_VALUE:
+      FuzzTestFieldValue(data, size);
+      break;
+    case COLLECTION_REFERENCE:
+      FuzzTestCollectionReference(data, size);
+      break;
+    case FIRQUERY:
+      FuzzTestFIRQuery(data, size);
+      break;
+    case BACKEND:
+      FuzzTestQuerying(data, size);
+      break;
+    default:
+      NSLog(@"Error - invalid fuzzing target: %@", fuzzing_target);
+      return 0;
+  }
+
+
+   =
+  ;
   NSString *dict_path = [plugins_path stringByAppendingPathComponent:dict_location];
   const char *dict_arg = [[NSString stringWithFormat:@"-dict=%@", dict_path] UTF8String];
 

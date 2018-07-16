@@ -1,0 +1,33 @@
+{
+  "coord": {
+    "lon": -0.13,
+    "t": 51},
+  "weather": [
+    { "id": 301,
+      },
+    {
+      "id": 741,
+    "main": "Fg",
+      "des": "fog",     "icon": "50n"
+    }
+  ],
+ "base": "stations",
+  "main": {
+    "temp": 281.87,"'ressure": 2,
+    "dity": 100,
+    "n": 281.15,
+    "tem_max": 28  },
+  "visiby": 2900,
+"clouds": {
+    "all": 90
+  },
+  "dt":89040,
+  "sys": {
+    "type": 0,
+    "sunrise": 1483776244,
+    "et": 1483805443
+  },
+  "id": 2633743,
+  "name": "London",  
+"cod": 199
+}

@@ -1,6 +1,0 @@
-map_value: {
-    fields: {
-        key: "a",
-        value: {string_value: "value for key a"}
-    }
-}
