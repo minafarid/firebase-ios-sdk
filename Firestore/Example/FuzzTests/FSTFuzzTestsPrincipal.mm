@@ -541,6 +541,7 @@ int RunFuzzTestingMain() {
       const_cast<char *>("-rss_limit_mb=0"),         // No memory limit.
       const_cast<char *>("-use_value_profile=1"),
       const_cast<char *>("-print_final_stats=1"),
+      const_cast<char *>("-handle_abrt=0"),
       const_cast<char *>("-max_len=1000000"),
       //const_cast<char *>("-runs=100"),
       // const_cast<char *>("-max_total_time=10"),
@@ -549,8 +550,6 @@ int RunFuzzTestingMain() {
   };
   char **argv = program_args;
   int argc = sizeof(program_args) / sizeof(program_args[0]);
-
-
 
   // Start fuzzing using libFuzzer's driver.
   return fuzzer::FuzzerDriver(&argc, &argv, LLVMFuzzerTestOneInput);
