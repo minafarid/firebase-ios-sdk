@@ -149,7 +149,6 @@ FIRFirestoreSettings *FirestoreHexaSettings() {
     // second is used for github clones.
     host = @"localhost:8081";
     settings.sslEnabled = YES;
-    NSLog(@"Bundle path = %@", [[NSBundle mainBundle] bundlePath]);
     NSString *certsPath =
     [[NSBundle mainBundle] pathForResource:@"PlugIns/Firestore_FuzzTests_iOS.xctest/CAcert"
                                     ofType:@"pem"];
