@@ -53,15 +53,16 @@ using firebase::firestore::model::ResourcePath;
 namespace {
 
 enum FuzzingTarget {
-  SERIALIZER = 0,
-  FIELD_PATH = 1,
-  FIELD_VALUE = 2,
-  COLLECTION_REFERENCE = 3,
-  FIRQUERY = 4,
-  BACKEND = 5
+  NONE = 0,
+  SERIALIZER = 1,
+  FIELDPATH = 2,
+  FIELDVALUE = 3,
+  COLLECTIONREFERENCE = 4,
+  FIRQUERY = 5,
+  BACKEND = 6
 };
 
-static FuzzingTarget fuzzing_target = BACKEND;
+static FuzzingTarget fuzzing_target = COLLECTIONREFERENCE;
 
 NSArray *GetPossibleValuesForBytes(const uint8_t *data, size_t size) {
   NSMutableArray *vals = [[NSMutableArray alloc] init];
@@ -203,7 +204,7 @@ FIRFirestore *GetHexaFirestore() {
 }
 
 // Fuzz-test creating a FieldPath reference.
-void FuzzTestFieldPath(const uint8_t *data, size_t size) {
+int FuzzTestFieldPath(const uint8_t *data, size_t size) {
   @autoreleasepool {
     // Convert the bytes to a string with UTF-8 format.
     NSData *d = [NSData dataWithBytes:data length:size];
@@ -217,6 +218,7 @@ void FuzzTestFieldPath(const uint8_t *data, size_t size) {
       FIRFieldPath *fp2 = [FIRFieldPath pathWithDotSeparatedString:string];
     } @catch (...) {}
   }
+  return 0;
 }
 
 // Fuzz test creating collection reference.
@@ -240,7 +242,7 @@ void FuzzTestCollectionReference(const uint8_t *data, size_t size) {
 
 // Fuzz-test the deserialization process in Firestore. The Serializer reads raw
 // bytes and converts them to a model object.
-void FuzzTestDeserialization(const uint8_t *data, size_t size) {
+int FuzzTestDeserialization(const uint8_t *data, size_t size) {
   Serializer serializer{DatabaseId{"project", DatabaseId::kDefault}};
 
   @autoreleasepool {
@@ -258,6 +260,7 @@ void FuzzTestDeserialization(const uint8_t *data, size_t size) {
       // Ignore caught exceptions.
     }
   }
+  return 0;
 }
 
 void FuzzTestFIRQuery(const uint8_t *data, size_t size) {
@@ -301,7 +304,6 @@ void FuzzTestFIRQuery(const uint8_t *data, size_t size) {
   } catch (...) {
   }
 }
-
 
 void FuzzTestBackend(const uint8_t *data, size_t size) {
   static FIRFirestore *firestore = GetHexaFirestore();
@@ -435,7 +437,7 @@ void FuzzTestBackend(const uint8_t *data, size_t size) {
   }
 
   //*-----------------------------------------------------------
-  if (!string_contains_null) {
+  //if (!string_contains_null) {
     @try {
       XCTestExpectation *ex = [[XCTestExpectation alloc] initWithDescription:@"q1_ex"];
       [expectations addObject:ex];
@@ -451,12 +453,12 @@ void FuzzTestBackend(const uint8_t *data, size_t size) {
     } @catch (...) {
       // NSLog(@"4 Something went really wrong");
     }
-  }
+  //}
   //*///------------------------------------------------------------------------
 
   XCTWaiterResult waiterResult =
-  [XCTWaiter waitForExpectations:expectations timeout:5 enforceOrder:NO];
-  NSLog(@"Waiter result = %ld", (long)waiterResult);
+  [XCTWaiter waitForExpectations:expectations timeout:10];
+  NSLog(@"================================= Waiter result = %ld", (long)waiterResult);
 }
 
 // Contains the code to be fuzzed. Called by the fuzzing library with
@@ -466,13 +468,13 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     case SERIALIZER:
       FuzzTestDeserialization(data, size);
       break;
-    case FIELD_PATH:
+    case FIELDPATH:
       FuzzTestFieldPath(data, size);
       break;
-    case FIELD_VALUE:
+    case FIELDVALUE:
       FuzzTestFieldValue(data, size);
       break;
-    case COLLECTION_REFERENCE:
+    case COLLECTIONREFERENCE:
       FuzzTestCollectionReference(data, size);
       break;
     case FIRQUERY:
@@ -497,17 +499,18 @@ int RunFuzzTestingMain() {
   NSString *dict_location;
   NSString *corpus_location;
 
+  // Set the dictionary and corpus locations according to the fuzzing target.
   switch (fuzzing_target) {
     case SERIALIZER:
       dict_location = [resources_location stringByAppendingPathComponent:@"Serializer/serializer.dictionary"];
       corpus_location = @"FuzzTestsCorpus";
       break;
-    case COLLECTION_REFERENCE:  // Uses FieldPath for now.
-    case FIELD_PATH:
+    case COLLECTIONREFERENCE:  // Uses FieldPath for now.
+    case FIELDPATH:
       dict_location = [resources_location stringByAppendingPathComponent:@"FieldPath/fieldpath.dictionary"];
       corpus_location = [resources_location stringByAppendingPathComponent:@"FieldPath/Corpus"];
       break;
-    case FIELD_VALUE:
+    case FIELDVALUE:
       dict_location = [resources_location stringByAppendingPathComponent:@"FieldValue/fieldvalue.dictionary"];
       corpus_location = [resources_location stringByAppendingPathComponent:@"FieldValue/Corpus"];
       break;
@@ -531,13 +534,18 @@ int RunFuzzTestingMain() {
   const char *dict_arg = [[NSString stringWithFormat:@"-dict=%@", dict_path] UTF8String];
   const char *corpus_arg = [corpus_path UTF8String];
 
+  // The directory in which libFuzzer writes crashing inputs.
+  const char *prefix_arg =
+  [[@"-artifact_prefix=" stringByAppendingString:NSTemporaryDirectory()] UTF8String];
+
   // Arguments to libFuzzer main() function should be added to this array,
   // e.g., dictionaries, corpus, number of runs, jobs, etc. The FuzzerDriver of
   // libFuzzer expects the non-const argument 'char ***argv' and it does not
   // modify it throughout the method.
   char *program_args[] = {
       const_cast<char *>("RunFuzzTestingMain"),      // 1st arg is program name.
-      const_cast<char *>("-artifact_prefix=/tmp/"),  // Write crashes to /tmp.
+      //const_cast<char *>("-artifact_prefix=/tmp/"),  // Write crashes to /tmp.
+      const_cast<char *>(prefix_arg),                 // Write crashes to temp directory.
       const_cast<char *>("-rss_limit_mb=0"),         // No memory limit.
       const_cast<char *>("-use_value_profile=1"),
       const_cast<char *>("-print_final_stats=1"),
@@ -552,9 +560,30 @@ int RunFuzzTestingMain() {
   int argc = sizeof(program_args) / sizeof(program_args[0]);
 
   // Start fuzzing using libFuzzer's driver.
-  return fuzzer::FuzzerDriver(&argc, &argv, LLVMFuzzerTestOneInput);
+  fuzzer::UserCallback llvm_fuzzer_test_one_input_method = LLVMFuzzerTestOneInput;
+
+  return fuzzer::FuzzerDriver(&argc, &argv, llvm_fuzzer_test_one_input_method);
 }
 
+void SingleTest() {
+  NSMutableArray *expectations = [NSMutableArray array];
+
+  NSLog(@"Yo!");
+  static FIRFirestore *firestore = GetHexaFirestore();
+  FIRCollectionReference *col = [firestore collectionWithPath:@"fuzzing"];
+  NSMutableDictionary *doc_data = [[NSMutableDictionary alloc] init];
+  [doc_data setValue:@"there" forKey:@"hi"];
+  XCTestExpectation *doc_ex = [[XCTestExpectation alloc] initWithDescription:@"document_reference"];
+  FIRDocumentReference *doc = [col documentWithAutoID];
+  NSLog(@"Doc id = %@", [doc documentID]);
+  [doc updateData:doc_data completion:^(NSError * _Nullable error) {
+    NSLog(@"Doc update returned, error = %@!", error);
+    [doc_ex fulfill];
+  }];
+
+  XCTWaiterResult waiterResult = [XCTWaiter waitForExpectations:expectations timeout:5 enforceOrder:NO];
+  NSLog(@"Waiter result = %ld", (long)waiterResult);
+}
 }  // namespace
 
 /**
@@ -572,6 +601,7 @@ int RunFuzzTestingMain() {
 - (instancetype)init {
   self = [super init];
   RunFuzzTestingMain();
+  //SingleTest();
   return self;
 }
 
